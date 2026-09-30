@@ -1,0 +1,192 @@
+/* Dimensions en `cqw` de la vignette elle-même (elle est déclarée `.piece`,
+   donc conteneur).
+   Attention : contrairement à une pièce, une vignette n'est jamais vue en
+   plein écran — on y entre LATÉRALEMENT, le zoom ne descend pas dedans. Elle
+   se lit donc toujours à sa petite taille, et le rattrapage global `--texte`
+   (calibré pour une pièce qui remplit l'écran) la ferait déborder. Elle
+   redéfinit la variable pour elle-même. */
+
+:host {
+  --texte: 1;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  :host {
+    --texte: 0.72;
+  }
+}
+
+/* La vignette est une CARTE, donc elle est en verre comme les autres —
+   décision de Paul du 11/09 : la même matière partout. Et depuis le 23/09, LE
+   MÊME DESSIN que la carte du seuil : « il faut que les cartes soient les
+   mêmes que le style utilisé dans la page Paul Moulin ».
+
+   Les réglages de `.verre` sont en `cqw`, c'est-à-dire en pour cent de la
+   salle. Mais la vignette est son propre conteneur (`.piece`) : ici, `cqw`
+   mesurerait la carte, et le même 1,5 donnerait un arrondi quatre fois plus
+   petit que celui du seuil. On les réécrit donc en `vw` — une salle posée a
+   exactement la largeur de l'écran, donc 1vw y vaut le 1cqw du seuil.
+
+   Seul le voile reste à elle : NEUTRE, pas marine. La salle 2 est
+   « strictement monochrome sauf le bleu #4182f2 d'une seule action »
+   (décision du 07/09), et le voile du seuil tire sur le bleu ;
+   par transparence sur le temple, il se voyait. Un peu plus dense aussi
+   (0,58 contre 0,52) : la colonne de lumière du décor, derrière, passerait
+   sinon en plein milieu du texte. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  /* Le titre EN HAUT, la pile EN BAS (Paul, 23/09 : « on a de la place dans
+     la carte et on ne l'exploite pas »). C'est aussi ce qui laisse le titre
+     immobile quand la carte s'ouvre en grand : il y est déjà en haut. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2cqw;
+  padding: 7cqw;
+
+  /* Tout ce qui fait le verre est multiplié par `--apparition` : 1 d'habitude,
+     et de 0 à 1 quand la carte naît de la fumée (voir plus bas). */
+  --verre-rayon: var(--arrondi-carte, 1.5vw);
+  --verre-flou: calc(1.7vw * var(--apparition));
+  --verre-voile: rgba(10, 10, 11, calc(0.58 * var(--apparition)));
+  --verre-ombre:
+    0 1.1vw 3.4vw rgba(0, 0, 0, calc(0.38 * var(--apparition))),
+    0 0.2vw 0.8vw rgba(0, 0, 0, calc(0.22 * var(--apparition))),
+    inset 0 0.08vw 0 rgba(232, 238, 251, calc(0.16 * var(--apparition)));
+  /* Le texte vient APRÈS la matière : il attend que le verre soit à un tiers. */
+  --apparition-texte: clamp(0, (var(--apparition) - 0.35) / 0.65, 1);
+}
+
+.vignette__baseline {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 3.1 * var(--unite, 1cqw));
+  letter-spacing: 0.18em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  /* L'orange de « Harness is everything » (Paul, 29/09) : le bleu jurait avec
+     l'ambre des petits titres. */
+  color: var(--accent-chaud);
+}
+
+.vignette__nom {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: calc(var(--texte, 1) * 8.6 * var(--unite, 1cqw));
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* La phrase d'usage, sous le nom : la même que dans la carte ouverte
+   (`univers.css`, `.carte__accroche`). */
+.vignette__accroche {
+  margin: 0;
+  font-size: calc(var(--texte, 1) * 3.7 * var(--unite, 1cqw));
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+.vignette__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6cqw;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Les pastilles : des bulles du MÊME verre que la carte (Paul, 23/09 :
+   « exactement les mêmes »), arrondies jusqu'au bout. L'ombre seule est
+   réduite à leur taille — celle d'une carte les noierait. */
+.vignette__stack li {
+  --verre-rayon: 999px;
+  --verre-flou: calc(1.7vw * var(--apparition));
+  --verre-voile: rgba(10, 10, 11, calc(0.58 * var(--apparition)));
+  --verre-ombre:
+    0 0.25vw 0.8vw rgba(0, 0, 0, calc(0.3 * var(--apparition))),
+    inset 0 0.08vw 0 rgba(232, 238, 251, calc(0.16 * var(--apparition)));
+  padding: 1cqw 3cqw;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 2.7 * var(--unite, 1cqw));
+  line-height: 1.4;
+  color: var(--encre-douce);
+}
+
+/* LA CARTE QUI NAÎT DE LA FUMÉE (Paul, 25/09). `--apparition` descend de la
+   salle (`projets.css`) et va de 0 à 1 : le verre se forme au lieu d'apparaître
+   en fondu. Une opacité sur la carte couperait son flou — c'est le piège déjà
+   rencontré à l'entrée des cartes le 23/09.
+
+   Ce que `.verre` (dans `styles.css`) fixe en dur est repris ici en
+   proportion : le dégradé de la face, l'anneau de l'arête et leurs filtres. À
+   0, chaque filtre est l'identité — flou nul, saturation et luminosité à 1 —
+   donc le verre ne se voit plus du tout, arête comprise. */
+.vignette,
+.vignette__stack li {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(232, 238, 251, calc(0.075 * var(--apparition))) 0%,
+      rgba(232, 238, 251, calc(0.022 * var(--apparition))) 42%,
+      rgba(232, 238, 251, 0) 100%
+    ),
+    var(--verre-voile);
+}
+.vignette::after,
+.vignette__stack li::after {
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, calc(0.5 * var(--apparition))) 0%,
+    rgba(255, 255, 255, calc(0.12 * var(--apparition))) 26%,
+    rgba(255, 255, 255, calc(0.04 * var(--apparition))) 54%,
+    rgba(255, 255, 255, calc(0.2 * var(--apparition))) 80%,
+    rgba(255, 255, 255, calc(0.42 * var(--apparition))) 100%
+  );
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .vignette,
+  .vignette__stack li {
+    -webkit-backdrop-filter: saturate(calc(1 + 0.7 * var(--apparition))) blur(var(--verre-flou));
+    backdrop-filter: saturate(calc(1 + 0.7 * var(--apparition))) blur(var(--verre-flou));
+  }
+  .vignette::after,
+  .vignette__stack li::after {
+    -webkit-backdrop-filter: brightness(calc(1 + 0.7 * var(--apparition)))
+      saturate(calc(1 + 1.6 * var(--apparition))) blur(calc(var(--verre-flou) / 5.5));
+    backdrop-filter: brightness(calc(1 + 0.7 * var(--apparition)))
+      saturate(calc(1 + 1.6 * var(--apparition))) blur(calc(var(--verre-flou) / 5.5));
+  }
+}
+
+/* Le texte, lui, n'a pas de flou : une vraie opacité ne coûte rien. Pas sur
+   les pastilles elles-mêmes, qui sont du verre — sur leur seul libellé. */
+.vignette__baseline,
+.vignette__nom,
+.vignette__accroche,
+.vignette__outil {
+  opacity: var(--apparition-texte);
+}
+
+/* Moins de transparence demandée : la carte pleine de `styles.css`, qui
+   apparaît en proportion elle aussi. Les règles ci-dessus l'emporteraient
+   sinon sur la sienne. */
+@media (prefers-reduced-transparency: reduce) {
+  .vignette,
+  .vignette__stack li {
+    background: rgba(11, 15, 25, var(--apparition));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .vignette::after,
+  .vignette__stack li::after {
+    background: rgba(232, 238, 251, calc(0.22 * var(--apparition)));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* LA CARTE QU'ON PRESSE (Paul, 27/09) : l'inclinaison et le reflet de
+   vitre sont la classe `reflet` de `styles.css`, partagée avec les boutons
+   de liens de la carte ouverte. */

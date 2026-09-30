@@ -1,0 +1,69 @@
+<div class="piece__contenu" [style.opacity]="opacite()">
+  <!-- La carte de gauche, au gabarit de celle du seuil (Paul, 23/09). Trois
+       pages, qui suivent les parties des cartes de projets (Paul, 28/09) ; la
+       molette les tourne avant de changer de salle. Chaque page est découpée
+       en parties qui se répartissent dans sa hauteur (Paul, 29/09). -->
+  <pz-carte-texte class="orch__carte" salle="orchestrateur">
+    <ng-template pzPage>
+      <div class="orch__page">
+        <div class="orch__partie">
+          <h2 class="piece__titre">{{ donnees().titre }}</h2>
+          <p class="orch__baseline">{{ donnees().baseline }}</p>
+        </div>
+        <div class="orch__partie">
+          <h3 class="orch__intertitre">{{ mots().depart }}</h3>
+          <p class="piece__texte orch__texte">{{ donnees().depart }}</p>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pzPage>
+      <div class="orch__page">
+        <div class="orch__partie">
+          <h3 class="orch__intertitre">{{ mots().part }}</h3>
+          <ul class="orch__liste">
+            @for (point of donnees().part; track point) {
+              <li class="orch__point">{{ point }}</li>
+            }
+          </ul>
+        </div>
+        <div class="orch__partie">
+          <!-- Un nom de fichier, comme ceux que lisent les agents : il garde sa
+               casse et la police du code (Paul, 28/09). -->
+          <h3 class="orch__intertitre orch__intertitre--fichier">MySkill.md</h3>
+          <ul class="orch__liste">
+            @for (point of donnees().acquis; track point) {
+              <li class="orch__point">{{ point }}</li>
+            }
+          </ul>
+        </div>
+        <div class="orch__partie">
+          <h3 class="orch__intertitre">{{ mots().difficulte }}</h3>
+          <!-- Un retour à la ligne, pas un nouveau paragraphe (Paul, 29/09). -->
+          <p class="piece__texte orch__texte orch__texte--liste">
+            @for (ligne of donnees().difficulte; track ligne; let premiere = $first) {
+              @if (!premiere) {<br />}{{ ligne }}
+            }
+          </p>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pzPage>
+      <div class="orch__page">
+        <div class="orch__partie">
+          <h3 class="orch__intertitre orch__intertitre--citation">Harness is everything</h3>
+          <p class="piece__texte orch__texte">{{ donnees().harnais }}</p>
+        </div>
+        <div class="orch__partie">
+          <h3 class="orch__intertitre">{{ mots().suite }}</h3>
+          <ul class="orch__liste">
+            @for (point of donnees().suite; track point) {
+              <li class="orch__point">{{ point }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </ng-template>
+  </pz-carte-texte>
+</div>

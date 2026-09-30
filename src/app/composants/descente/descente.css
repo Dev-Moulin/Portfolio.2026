@@ -1,0 +1,27 @@
+/* La descente ne fait jamais partie de la scène : elle est posée par-dessus,
+   à la taille de l'écran, pour être dessinée à sa vraie résolution.
+
+   Une seule toile, donc un seul calque composé. C'est tout l'intérêt : plus
+   de montage/démontage d'images, plus de tramage décidé par le navigateur
+   dans notre dos — c'est le composant qui dessine, image par image. */
+
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* au-dessus de la scène, sous les repères (10) */
+  pointer-events: none;
+  background: transparent;
+}
+
+.descente__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* La porte du temple : la toile prend la place du DÉCOR, derrière la scène.
+   Même niveau que la vidéo du temple (0) : c'est l'ordre du document qui la
+   pose au-dessus de la vidéo et sous la vue — voir `app.html`. */
+:host(.descente--derriere) {
+  z-index: 0;
+}

@@ -1,0 +1,145 @@
+/* En haut à GAUCHE : les repères et leur libellé occupent la droite, et
+   c'est justement le bord où les emblèmes se posent — la règle ne doit pas
+   cacher ce qu'elle mesure. */
+:host {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  width: 232px;
+  padding: 10px 13px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(10, 10, 13, 0.86);
+  backdrop-filter: blur(10px);
+  color: var(--encre);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.regle__titre {
+  margin: 0;
+}
+
+.regle__plier {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre-tenue);
+  font: inherit;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.regle__ligne {
+  display: block;
+  margin-top: 10px;
+  color: var(--encre-douce);
+}
+
+.regle__ligne b {
+  float: right;
+  font-weight: 400;
+  color: var(--encre);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type='range'] {
+  width: 100%;
+  margin: 4px 0 0;
+  accent-color: var(--accent);
+}
+
+.regle__mesures {
+  display: grid;
+  gap: 3px;
+  margin: 11px 0 0;
+  padding: 8px 9px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.regle__mesures div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.regle__mesures dt {
+  color: var(--encre-tenue);
+}
+
+.regle__mesures dd {
+  margin: 0;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.regle__note {
+  margin: 9px 0 0;
+  color: var(--encre-tenue);
+  font-size: 10.5px;
+}
+
+.regle__note code {
+  font: inherit;
+  color: var(--encre);
+}
+
+.regle__retour {
+  width: 100%;
+  margin-top: 9px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--encre);
+  font: inherit;
+  cursor: pointer;
+}
+
+.regle__retour:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* La saisie au clavier et le rappel de la loi, sous le curseur du nombre. */
+.regle__appoint {
+  display: flex;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.regle__appoint input[type='number'] {
+  width: 74px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.42);
+  color: var(--encre);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.regle__appoint button {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.regle__appoint button:disabled {
+  color: var(--encre-tenue);
+  opacity: 0.55;
+  cursor: default;
+}

@@ -1,0 +1,380 @@
+/* La carte ouverte EN DEUX PAGES (voir `univers.ts`) : les pages, le
+   carrousel de la démo, les boutons de liens et les points. À part de
+   `univers.css` pour que chaque feuille reste sous le budget de taille. */
+
+/* — LA CARTE EN DEUX PAGES (Paul, 27/09) : le projet, puis ma part —
+   L'en-tête et la pile ne bougent pas : on sait toujours où l'on est. Entre
+   les deux, les pages sont EMPILÉES dans la même case de grille : la zone a
+   donc la hauteur de la plus longue, et la carte ne change pas de taille
+   en tournant la page. Tourner, c'est la page lue qui part vers le haut
+   pendant que l'autre monte du bas — comme les cartes de texte des salles,
+   à la même vitesse. De l'opacité ici, c'est permis : ces pages sont DANS
+   le verre, pas le verre lui-même. */
+.carte__pages {
+  display: grid;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.carte__page {
+  grid-area: 1 / 1;
+  translate: 0 0;
+  opacity: 1;
+  transition:
+    translate var(--mouvement) var(--mouvement-courbe),
+    opacity var(--mouvement) var(--mouvement-courbe);
+}
+
+.carte__page--lue {
+  translate: 0 -100%;
+  opacity: 0;
+}
+
+.carte__page--suivante {
+  translate: 0 100%;
+  opacity: 0;
+}
+
+.carte__intertitre {
+  margin: 0;
+  padding-top: calc(2.6 * var(--c));
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 2.6 * var(--u));
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--accent-ambre);
+}
+
+.carte__texte {
+  margin: 0;
+  padding-top: calc(1 * var(--c));
+  font-size: calc(var(--t) * 3.3 * var(--u));
+  line-height: 1.55;
+  color: var(--encre);
+}
+
+.carte__liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte__liste .carte__fait {
+  padding-top: calc(0.8 * var(--c));
+}
+
+.carte__liste .carte__fait::before {
+  top: calc(0.8 * var(--c) + 0.775em - 0.18em);
+}
+
+/* LA DÉMO EN COVER FLOW (Paul, 27/09 — celui d'Apple, iTunes puis
+   l'iPhone). Un extrait au centre, face à nous, qui tourne ; les deux autres
+   derrière lui, plus petits, tournés vers le centre comme des pochettes
+   qu'on feuillette, en pause et assombris. Un clic sur l'un d'eux l'amène au
+   centre ; un clic au centre ouvre la démo entière.
+   La hauteur est fixée par le format (le centre fait 62 % de large, en
+   16/9), pas par la vidéo : la carte est mesurée avant qu'aucune ne soit
+   chargée. */
+.carte__demo {
+  padding-top: calc(3 * var(--c));
+}
+
+.carte__coverflow {
+  position: relative;
+  aspect-ratio: 100 / 34.9;
+  perspective: 1000px;
+}
+
+.carte__boucle {
+  position: absolute;
+  left: 19%;
+  top: 0;
+  width: 62%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: calc(1.6 * var(--c));
+  background: #000;
+  box-shadow:
+    inset 0 0 0 1px rgba(232, 238, 251, 0.1),
+    0 0.8vw 2.4vw rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition:
+    transform 0.8s var(--mouvement-courbe),
+    filter 0.8s var(--mouvement-courbe);
+}
+
+.carte__boucle[data-rang='0'] {
+  z-index: 2;
+}
+
+/* Les côtés : décalés, reculés, tournés — le bord extérieur vient vers
+   nous, le bord intérieur passe derrière l'extrait du centre. */
+.carte__boucle[data-rang='1'] {
+  z-index: 1;
+  transform: translateX(34%) scale(0.78) rotateY(-28deg);
+  filter: brightness(0.45);
+}
+
+.carte__boucle[data-rang='-1'] {
+  z-index: 1;
+  transform: translateX(-34%) scale(0.78) rotateY(28deg);
+  filter: brightness(0.45);
+}
+
+/* Au-delà (Overmind a cinq extraits) : plus loin, plus sombres, derrière. */
+.carte__boucle[data-rang='2'],
+.carte__boucle[data-rang='-2'] {
+  z-index: 0;
+  transform: translateX(52%) scale(0.6) rotateY(-28deg);
+  filter: brightness(0.25);
+}
+
+.carte__boucle[data-rang='-2'] {
+  transform: translateX(-52%) scale(0.6) rotateY(28deg);
+}
+
+.carte__boucle[data-rang='1']:hover,
+.carte__boucle[data-rang='-1']:hover {
+  filter: brightness(0.7);
+}
+
+/* Le lien à gauche, les points AU MILIEU, sous l'extrait du centre (Paul,
+   27/09). */
+.carte__demo-pied {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-top: calc(1.6 * var(--c));
+}
+
+/* La légende de l'extrait du centre, sa date et l'étape : sous les
+   vidéos, au-dessus des points (Paul, 28/09). */
+.carte__legende {
+  margin: 0;
+  padding-top: calc(1.4 * var(--c));
+  text-align: center;
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 2.5 * var(--u));
+  line-height: 1.4;
+  color: var(--encre-tenue);
+}
+
+/* La démo, et à côté d'elle le code (Paul, 28/09, pour Overmind). */
+.carte__demo-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.6 * var(--c));
+  justify-self: start;
+}
+
+/* LES LIENS EN BOUTONS DE VERRE (Paul, 27/09), avec ses icônes : Play pour
+   la démo, Link pour le reste. Le même verre que les étiquettes d'outils,
+   en plus grand ; au survol, il s'éclaire comme les cartes. Les icônes sont
+   des masques : elles prennent la couleur du texte. */
+.carte__bouton {
+  --verre-rayon: 999px;
+  --verre-flou: 1.7vw;
+  --verre-voile: rgba(10, 10, 11, 0.58);
+  --verre-ombre:
+    0 0.25vw 0.8vw rgba(0, 0, 0, 0.3), inset 0 0.08vw 0 rgba(232, 238, 251, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.4 * var(--c));
+  justify-self: start;
+  padding: calc(1.2 * var(--c)) calc(3.4 * var(--c)) calc(1.2 * var(--c)) calc(2.4 * var(--c));
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 2.8 * var(--u));
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--encre);
+  text-decoration: none;
+  /* Les transitions de `.reflet` (`styles.css`) seraient écrasées : on
+     reprend la sienne. */
+  transition:
+    background-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 0.5s var(--mouvement-courbe);
+}
+
+.carte__bouton:hover,
+.carte__bouton:focus-visible {
+  outline: none;
+  background-color: rgba(232, 238, 251, 0.1);
+  box-shadow:
+    0 0.25vw 0.8vw rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(232, 238, 251, 0.35);
+}
+
+.carte__icone {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+  background: currentColor;
+  mask: url('../../../../public/icones/lien.svg') center / contain no-repeat;
+}
+
+.carte__icone--play {
+  mask-image: url('../../../../public/icones/play.svg');
+}
+
+.carte__extraits {
+  display: flex;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte__extrait {
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--encre-tenue);
+  cursor: pointer;
+  transition:
+    transform 240ms ease,
+    background 240ms ease;
+}
+
+.carte__extrait:hover,
+.carte__extrait:focus-visible {
+  outline: none;
+  background: var(--encre);
+}
+
+.carte__extrait--actif {
+  background: var(--encre);
+  transform: scale(1.35);
+}
+
+.carte__liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.6 * var(--c));
+  margin: 0;
+  padding: calc(2.6 * var(--c)) 0 0;
+  list-style: none;
+}
+
+/* Les points : une colonne contre le bord droit, comme sur les cartes de
+   texte des salles. Seulement une fois la carte ouverte. */
+.carte__points {
+  position: absolute;
+  z-index: 2;
+  right: calc(2.6 * var(--c));
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--mouvement) var(--mouvement-courbe);
+}
+
+.carte--ouverte .carte__points {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: var(--ouverture-lignes-delai);
+}
+
+.carte__point {
+  display: block;
+  width: 0.78rem;
+  height: 0.78rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--encre-tenue);
+  cursor: pointer;
+  transition:
+    transform 240ms ease,
+    background 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.carte__point:hover,
+.carte__point:focus-visible {
+  outline: none;
+  background: var(--encre);
+}
+
+.carte__point--actif {
+  background: var(--encre);
+  transform: scale(1.45);
+  box-shadow: 0 0 0 0.42rem rgba(232, 238, 251, 0.14);
+}
+
+/* AU DOIGT : c'est la carte qui lit les glissements (`univers.ts`), pas le
+   navigateur — sauf si son contenu défile, où le doigt doit pouvoir le
+   faire défiler. */
+.carte--pages:not(.carte--defile) {
+  touch-action: none;
+}
+
+/* TÉLÉPHONE : une seule colonne qu'on fait défiler, la page 1 puis la
+   page 2 (voir `pagine` dans `univers.ts`). */
+:host(.univers--etroit) .carte__pages {
+  display: block;
+  overflow: visible;
+}
+
+/* Le doigt, n'importe où sur la carte, la fait défiler. */
+:host(.univers--etroit) .carte__defilement {
+  touch-action: pan-y;
+}
+
+/* Le doigt fait défiler la carte verticalement ; à l'horizontale, sur le
+   carrousel, c'est lui qui change d'extrait. */
+:host(.univers--etroit) .carte__coverflow {
+  touch-action: pan-y;
+}
+
+:host(.univers--etroit) .carte__bouton {
+  white-space: nowrap;
+}
+
+/* Trop étroit pour le bouton et les points sur une même ligne : les points
+   d'abord, centrés sous la vidéo, puis le bouton. */
+:host(.univers--etroit) .carte__demo-pied {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  row-gap: calc(2.4 * var(--c));
+}
+
+:host(.univers--etroit) .carte__extraits {
+  order: -1;
+}
+
+:host(.univers--etroit) .carte__demo-pied .carte__bouton {
+  justify-self: center;
+}
+
+/* TÉLÉPHONE (Paul, 28/09, sur croquis) : le même Cover Flow, resserré.
+   L'extrait du centre prend presque toute la largeur ; ceux de côté ne
+   font que dépasser derrière lui, juste assez pour qu'on voie qu'il y en a
+   d'autres. On change d'extrait en glissant le doigt, pas en visant ces
+   bords trop étroits. */
+:host(.univers--etroit) .carte__coverflow {
+  aspect-ratio: 100 / 45;
+}
+
+:host(.univers--etroit) .carte__boucle {
+  left: 10%;
+  width: 80%;
+}
+
+:host(.univers--etroit) .carte__boucle[data-rang='1'] {
+  transform: translateX(12%) scale(0.84) rotateY(-22deg);
+}
+
+:host(.univers--etroit) .carte__boucle[data-rang='-1'] {
+  transform: translateX(-12%) scale(0.84) rotateY(22deg);
+}

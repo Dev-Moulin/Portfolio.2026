@@ -1,0 +1,142 @@
+<h2 class="regle__titre">
+  <button type="button" class="regle__plier" (click)="replie.set(!replie())">
+    <span>Emblèmes</span>
+    <span aria-hidden="true">{{ replie() ? '+' : '−' }}</span>
+  </button>
+</h2>
+
+@if (!replie()) {
+  <label class="regle__ligne">
+    <span
+      >Largeur <b>{{ valeur().toFixed(3) }}</b></span
+    >
+    <input
+      type="range"
+      min="0.04"
+      max="0.6"
+      step="0.001"
+      [value]="valeur()"
+      (input)="glisser($event)"
+    />
+  </label>
+
+  <label class="regle__ligne">
+    <span
+      >Position X <b>{{ ecartXpx() > 0 ? '+' : '' }}{{ ecartXpx() }} px</b></span
+    >
+    <input
+      type="range"
+      min="-700"
+      max="700"
+      step="2"
+      [value]="ecartXpx()"
+      (input)="glisserX($event)"
+    />
+  </label>
+
+  <label class="regle__ligne">
+    <span
+      >Position Y <b>{{ ecartYpx() > 0 ? '+' : '' }}{{ ecartYpx() }} px</b></span
+    >
+    <input
+      type="range"
+      min="-500"
+      max="500"
+      step="2"
+      [value]="ecartYpx()"
+      (input)="glisserY($event)"
+    />
+  </label>
+
+  <label class="regle__ligne">
+    <span
+      >Profondeur Z <b>{{ ecartZ().toFixed(2) }}</b></span
+    >
+    <input
+      type="range"
+      min="-1.2"
+      max="1.2"
+      step="0.01"
+      [value]="ecartZ()"
+      (input)="glisserZ($event)"
+    />
+  </label>
+
+  <label class="regle__ligne">
+    <span
+      >Taille du point <b>{{ pointPx() }} px</b></span
+    >
+    <input
+      type="range"
+      [min]="POINT_MIN"
+      [max]="POINT_MAX"
+      step="0.05"
+      [value]="pointPx()"
+      (input)="glisserPoint($event)"
+    />
+  </label>
+
+  <label class="regle__ligne">
+    <span
+      >Filaments par point <b>{{ liens() }}</b></span
+    >
+    <input type="range" min="1" max="6" step="1" [value]="liens()" (input)="glisserLiens($event)" />
+  </label>
+
+  <label class="regle__ligne">
+    <span>
+      Particules
+      <b>{{ particules() }}</b>
+    </span>
+    <input
+      type="range"
+      [min]="PLANCHER"
+      [max]="PLAFOND"
+      step="10"
+      [value]="particules()"
+      (input)="glisserNombre($event)"
+    />
+    <span class="regle__appoint">
+      <input
+        type="number"
+        [min]="PLANCHER"
+        [max]="PLAFOND"
+        step="1"
+        [value]="particules()"
+        (change)="glisserNombre($event)"
+      />
+      <button type="button" [disabled]="!libre()" (click)="suivre.emit()">loi : {{ loi() }}</button>
+    </span>
+  </label>
+
+  <dl class="regle__mesures">
+    <div>
+      <dt>encre</dt>
+      <dd>{{ encre() }} %</dd>
+    </div>
+    <div>
+      <dt>côté maintenant</dt>
+      <dd>{{ coteMaintenant() }} px</dd>
+    </div>
+    <div>
+      <dt>côté salle pleine</dt>
+      <dd>{{ cotePlein() }} px</dd>
+    </div>
+    <div>
+      <dt>fenêtre</dt>
+      <dd>{{ taille().l }} × {{ taille().h }}</dd>
+    </div>
+  </dl>
+
+  <p class="regle__note">
+    L'encre est le juge : ~3 % à la taille d'origine, au-delà de ~20 % les points se touchent et le
+    réseau devient un pâté. « Côté maintenant » suit la descente et vaut 0 hors de la salle ; c'est
+    « salle pleine » qu'on note. À retenir : <code>w: {{ valeur().toFixed(3) }}</code
+    >,
+    <code>nombre: {{ particules() }}</code>
+  </p>
+
+  <button type="button" class="regle__retour" [disabled]="!bouge()" (click)="revenir()">
+    Revenir à {{ origine() }}
+  </button>
+}

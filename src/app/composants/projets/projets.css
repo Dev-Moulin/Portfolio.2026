@@ -1,0 +1,249 @@
+/* La salle n'a plus de fond à elle : c'est `pz-fond-salle2` qui le peint,
+   plein écran et derrière la scène. Transparent, et pas un bleu plus sombre :
+   tout ce qui serait peint ici recouvrirait le décor. */
+:host {
+  background: transparent;
+
+  /* LA CHORÉGRAPHIE (Paul, 23/09, refaite le 25/09). Une fois la caméra posée
+     dans la salle, le logo se forme (3,6 s, `particules-logo.ts`) et le texte
+     se lève peu après. C'est le PREMIER TEMPS.
+
+     Le SECOND TEMPS vient d'un cran de molette (`placement.ts`) : l'intro
+     s'efface, le logo monte à sa place « cartes », et les trois cartes
+     naissent d'une fumée (`pz-fumee`). En partant, les cartes s'en vont
+     D'ABORD, seules, dans leur fumée, caméra immobile ; une fois qu'elles ont
+     disparu, le titre et le logo partent à leur tour pendant que la caméra
+     prend son élan et que la fumée finit de se dissiper (`ATTENTE_AU_DEPART`,
+     `FIN_DISPARITION_CARTES` et `RETENUE_AU_DEPART`, dans
+     `coeur/choregraphie.ts` : à changer avec les deux réglages de
+     disparition ci-dessous).
+
+     La durée des entrées est LE MOUVEMENT DE RÉFÉRENCE du site (`--mouvement`,
+     dans `styles.css`).
+
+     LES RÉGLAGES SONT ICI — ceux des cartes vont avec la fumée : ses courbes
+     sont dans `coeur/fumee.ts`, et la carte doit se former PENDANT qu'elle
+     l'enveloppe, pas avant. */
+  --delai-texte: 0.4s;
+  --entree-texte: var(--mouvement);
+  --sortie-texte: 0.5s;
+  --delai-apparition-cartes: 0.55s;
+  --apparition-cartes: var(--mouvement);
+  --delai-disparition-cartes: 0.1s;
+  --disparition-cartes: 0.7s;
+  --sortie-cartes: 0.8s;
+}
+
+/* LES CARTES NAISSENT DE LA FUMÉE. Elles ne bougent pas : elles sont à leur
+   place, et c'est leur VERRE qui se forme — le flou, le voile, l'arête et
+   l'ombre montent de rien jusqu'à leur valeur, puis le texte (`--apparition`,
+   de 0 à 1, lu par `vignette.css`).
+
+   Pas d'opacité : sur la carte ou sur un de ses ancêtres, elle couperait le
+   flou d'arrière-plan pendant tout le mouvement. Pas de masque non plus, pour
+   la même raison : un masque posé sur la carte fait de son verre un monde
+   clos, et l'arête et les pastilles ne verraient plus le temple.
+
+   Cachée, une carte n'est plus peinte du tout (`visibility`) une fois sa
+   disparition finie, et ne prend ni la souris ni le clavier (`inert`, dans
+   `projets.html`). */
+.projets__carte {
+  --apparition: 0;
+  visibility: hidden;
+  transition:
+    --apparition var(--disparition-cartes) ease-in var(--delai-disparition-cartes),
+    visibility 0s linear calc(var(--delai-disparition-cartes) + var(--disparition-cartes)),
+    transform var(--sortie-cartes) cubic-bezier(0.3, 0, 0.6, 0.6);
+}
+:host(.projets--cartes-revelees) .projets__carte {
+  --apparition: 1;
+  visibility: visible;
+  transition:
+    --apparition var(--apparition-cartes) ease-in-out var(--delai-apparition-cartes),
+    visibility 0s,
+    transform var(--mouvement) var(--mouvement-courbe);
+}
+
+/* Le texte : une montée en fondu, provisoire — l'animation du texte reste à
+   choisir avec Paul. */
+.projets__titre,
+.projets__intro {
+  opacity: 0;
+  translate: 0 1.2cqw;
+  transition:
+    opacity var(--sortie-texte) ease-in,
+    translate var(--sortie-texte) ease-in;
+}
+:host(.choree--presente) .projets__titre,
+:host(.choree--presente) .projets__intro {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity var(--entree-texte) ease-out var(--delai-texte),
+    translate var(--entree-texte) var(--mouvement-courbe) var(--delai-texte);
+}
+
+/* Au second temps, l'intro laisse la place aux cartes — tout de suite, au
+   cran de molette, pendant que le logo monte. */
+:host(.projets--cartes) .projets__intro {
+  opacity: 0;
+  translate: 0 -1.2cqw;
+  transition:
+    opacity var(--sortie-texte) ease-in,
+    translate var(--sortie-texte) ease-in;
+}
+
+/* UNE CARTE OUVERTE EN GRAND (`pz-univers`, 23/09). Les deux autres cartes
+   s'écartent par leur bord, et reviennent quand la carte se referme. Les
+   sélecteurs portent l'attribut `data-entree` pour l'emporter sur l'état
+   « révélées ». */
+:host(.projets--carte-ouverte) .projets__carte[data-entree='gauche'] {
+  transform: translateX(-160%);
+}
+:host(.projets--carte-ouverte) .projets__carte[data-entree='droite'] {
+  transform: translateX(160%);
+}
+:host(.projets--carte-ouverte) .projets__carte[data-entree='bas'] {
+  transform: translateY(500%);
+}
+:host(.projets--carte-ouverte) .projets__carte[data-entree] {
+  transition: transform var(--sortie-cartes) cubic-bezier(0.3, 0, 0.6, 0.6);
+}
+/* Le titre, lui, RESTE avec le logo qui lui sert de croix (Paul, 25/09 : que
+   le logo disparaisse à l'ouverture d'une carte, « c'est pas ce qu'on veut »). */
+:host(.projets--carte-ouverte) .projets__intro {
+  opacity: 0;
+  translate: 0 1.2cqw;
+  transition:
+    opacity var(--sortie-texte) ease-in,
+    translate var(--sortie-texte) ease-in;
+}
+
+/* La carte choisie, elle, ne bouge pas : sa copie ouverte la remplace à
+   l'écran, et c'est ici qu'elle retombe en se refermant. Masquée tant que la
+   copie est LÀ, fermeture comprise — et pas seulement tant que le projet est
+   ouvert : sinon elle réapparaissait dès le clic de fermeture, pendant que
+   sa copie revenait encore vers elle. */
+:host .projets__carte.projets__carte--choisie[data-entree] {
+  transform: none;
+  transition: none;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projets__carte,
+  .projets__titre,
+  .projets__intro {
+    transition: none !important;
+  }
+}
+
+/* LE TITRE. Trois colonnes : THP contre le logo à gauche, INTUITION contre
+   lui à droite, et au milieu la place exacte du logo, qui fait la croix. Les
+   mots sont un peu AU-DESSUS du centre du logo (Paul, 25/09) : leur ligne
+   médiane est remontée d'un tiers de leur hauteur. */
+.projets__titre {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--logo-centre-y);
+  display: grid;
+  /* La toile est un carré ; le dessin n'en occupe qu'environ la moitié. */
+  grid-template-columns: 1fr calc(var(--logo-cote) * 0.6) 1fr;
+  align-items: center;
+  column-gap: 1.5cqw;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: calc(var(--texte, 1) * 4.6 * var(--unite, 1cqw));
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* Remonté par la marge : `translate` appartient à la chorégraphie. */
+  margin: -0.85em 0 0;
+}
+
+.projets__mot--gauche {
+  justify-self: end;
+}
+
+/* Le décalage réglé à la main (`placement.ts`), en centièmes de la salle.
+   `left`/`top` et pas `translate`, qui appartient à la chorégraphie. */
+.projets__mot {
+  position: relative;
+  left: calc(var(--dx, 0) * 1cqw);
+  top: calc(var(--dy, 0) * 1cqh);
+  /* D'un moment à l'autre (repos, cartes), les mots GLISSENT vers leur
+     nouvelle place au lieu d'y sauter (Paul, 29/09), à la vitesse de
+     référence du site. */
+  transition:
+    left var(--mouvement) var(--mouvement-courbe),
+    top var(--mouvement) var(--mouvement-courbe);
+}
+/* Sauf quand on les tire à la main avec l'outil de placement : ils doivent
+   suivre le doigt ou la souris sans traîner. */
+:host-context(.placement-libre-tire) .projets__mot {
+  transition: none;
+}
+.projets__mot--droite {
+  justify-self: start;
+}
+
+/* L'intro, centrée sous le logo. */
+.projets__intro {
+  position: absolute;
+  left: calc(50% + var(--dx, 0) * 1cqw);
+  top: calc(var(--logo-centre-y) + var(--logo-cote) / 2 + 1.5cqw + var(--dy, 0) * 1cqh);
+  width: 56cqw;
+  margin: 0 0 0 -28cqw;
+  text-align: center;
+  /* L'orange de « Harness is everything » (Paul, 29/09). */
+  color: var(--accent-chaud);
+}
+
+/* Étroit : le logo est plus grand et l'écran plus serré, les mots rétrécissent. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .projets__titre {
+    font-size: calc(var(--texte, 1) * 1.8 * var(--unite, 1cqw));
+    letter-spacing: 0.05em;
+    column-gap: 2cqw;
+  }
+  .projets__intro {
+    width: 88cqw;
+    margin-left: -44cqw;
+  }
+
+  /* UNE CARTE À LA FOIS (Paul, 29/09) : les trois à la même place, grande,
+     sous le titre et au-dessus de la barre du bas. Ces cartes s'ouvrent de
+     côté (`pz-univers`), la caméra n'y entre pas : leur cadre du modèle, aux
+     proportions de l'écran, ne sert pas ici, et la feuille de style
+     l'emporte sur lui. */
+  /* Ces quatre valeurs sont aussi `CARTE_ETROITE` (`coeur/presentation.ts`) :
+     la carte ouverte part d'ici et y revient. */
+  .projets__carte {
+    left: 12% !important;
+    width: 76% !important;
+    top: 42% !important;
+    height: 36% !important;
+    /* Plus arrondie qu'au bureau, où la carte est trois fois plus petite
+       (Paul, 29/09). */
+    --arrondi-carte: 5vw;
+  }
+
+  /* Son texte suit sa LARGEUR : la carte est maintenant plus large que haute,
+     et l'unité du téléphone (la hauteur, `styles.css`) le laissait minuscule.
+     1,28 donne un texte courant de 14 px sur un écran de 390 px. */
+  .projets__carte pz-vignette {
+    --unite: 1cqw;
+    --texte: 1.28;
+  }
+
+  /* Celle qu'on ne montre pas repart dans la fumée, comme toutes au départ. */
+  :host(.projets--cartes-revelees) .projets__carte.projets__carte--cachee {
+    --apparition: 0;
+    visibility: hidden;
+    transition:
+      --apparition var(--disparition-cartes) ease-in var(--delai-disparition-cartes),
+      visibility 0s linear calc(var(--delai-disparition-cartes) + var(--disparition-cartes)),
+      transform var(--sortie-cartes) cubic-bezier(0.3, 0, 0.6, 0.6);
+  }
+}

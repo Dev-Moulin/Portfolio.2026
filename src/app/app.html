@@ -1,0 +1,183 @@
+<!-- Le plan du site en texte : le contenu reste atteignable sans piloter la
+     caméra, pour un lecteur d'écran comme pour un moteur de recherche. -->
+<nav class="pour-lecteur" aria-label="Plan du portfolio" [attr.inert]="fond()">
+  <ul>
+    @for (piece of nav.chemin(); track piece; let i = $index) {
+      <li>
+        <a [href]="'#' + piece" (click)="nav.viserProfondeur(i)">{{ site.nom(piece, nav.graphe()[piece]?.nom) }}</a>
+      </li>
+    }
+    @for (projet of projets; track projet.id) {
+      <li>
+        <a [href]="'#' + projet.id" (click)="nav.ouvrirUnivers(projet.id)">{{ projet.nom }}</a>
+      </li>
+    }
+  </ul>
+</nav>
+
+<!-- Le fond du seuil : la trame animée. Posée AVANT la vue, donc derrière
+     elle — `.vue` ne crée pas de contexte d'empilement, c'est l'ordre du
+     document qui décide. Elle ne zoome pas : un fond qui suivrait le zoom
+     retomberait sur le plafond de texture de 16 384 px qui a déjà fait sauter
+     la photo du seuil aux trois quarts de la descente. -->
+<pz-trame [attr.inert]="fond()" />
+
+<!-- Le décor de la salle 2 : la boucle du temple, posée derrière la scène
+     pour la même raison que la trame. Elle se relaie avec la trame À
+     L'ARRIVÉE seulement — pas avant, sinon elle recouvre le seuil. -->
+<pz-fond-salle2 [attr.inert]="fond()" (pret)="decorPret.set(true)" />
+
+<!-- La porte du temple : le passage de la salle 2 à la salle Hermès. La toile
+     se pose ICI, entre le décor du temple et la vue, parce qu'elle prend la
+     place du décor — c'est le fond qui zoome, et les cartes de la salle 2
+     s'envolent par-dessus. Son dernier étage, le visage d'Hermès Agent dans
+     les nuages, reste en place : c'est le décor de la salle Hermès.
+
+     Chargée en approchant de la salle 2 seulement : 25 images qui, décodées,
+     pèsent de l'ordre de 200 Mo de mémoire — rien à imposer à qui s'arrête au
+     seuil. Elles ont toute la descente du « H » pour arriver. -->
+@defer (when nav.profondeurAffichee() > 0.5) {
+  <pz-descente [passage]="passageHermes()" />
+}
+
+<!-- Le décor vivant de la salle Hermès : la brume, les rayons et le logo qui
+     en sort, posés sur la toile du passage (qui porte la même image, fixe).
+     Au téléphone, sa version portrait. Chargé à l'approche de la salle
+     2 : la descente du temple lui laisse le temps d'arriver. -->
+@defer (when nav.profondeurAffichee() > 0.9) {
+  <!-- Deux branches identiques : le décor lit le format à sa création, et
+       faire pivoter un téléphone doit donc le recréer. -->
+  @if (nav.format() === 'large') {
+    <pz-fond-hermes [attr.inert]="fond()" />
+  } @else {
+    <pz-fond-hermes [attr.inert]="fond()" />
+  }
+}
+
+<!-- La vue. Les salles y sont posées CÔTE À CÔTE, chacune comme un calque
+     de la taille de l'écran avec sa propre transformation (`PieceBase`) —
+     plus jamais les unes DANS les autres. Celle où l'on est n'a aucune
+     transformation : grossissement 1, rien à arrondir de travers. Emboîtées,
+     elles étaient grossies ×457 et ×3 000, et peintes jusqu'à 200 px à côté
+     de leur place sur les écrans de Paul (23/09).
+
+     Une salle hors de `sallesMontees` n'existe pas du tout : composant
+     compris, elle est démontée. Au repos, il n'y en a qu'une. -->
+<div class="vue" [attr.inert]="fond()">
+  @if (nav.sallesMontees().has('seuil')) {
+    <pz-seuil />
+  }
+  @if (nav.sallesMontees().has('projets')) {
+    <pz-projets />
+  }
+  @if (nav.sallesMontees().has('orchestrateur')) {
+    <pz-orchestrateur />
+  }
+  <pz-portes />
+</div>
+
+<!-- La descente pre-calculee : posee PAR-DESSUS la scene, jamais dedans,
+     pour que chaque etage soit trame a la taille de l'ecran. -->
+<pz-descente />
+
+<!-- LA PAGE D'ABORD, LE DÉCOR ENSUITE, LE CANVAS EN DERNIER. Mesuré le 08/09
+     sur réseau bridé : Three.js avait fait passer le bundle initial de 200 à
+     788 Ko, et la première peinture de contenu attendait 1,39 s qu'il soit
+     arrivé. `@defer` le sort du bundle initial.
+
+     Le déclencheur n'est plus `on idle` mais le décor lui-même : Three.js ne
+     part qu'une fois la première image de la boucle décodée. Demande de Paul
+     le 11/09 — « il faut que ce soit après avoir chargé le contenu de la
+     deuxième page, surtout pas avant ». Le `on timer` n'est qu'un filet : si
+     la vidéo est refusée ou absente, la salle finit quand même par avoir son
+     emblème. -->
+@defer (when decorPret(); on timer(9s)) {
+  <!-- UN SEUL emblème, centré. Le décor de la salle 2 est une composition
+       symétrique : les deux figures tendent les mains vers le milieu et la
+       colonne de lumière y descend. Deux emblèmes décalés à droite, hérités du
+       fond bleu, n'avaient plus lieu d'être — et la mesure du décor le confirme,
+       le creux d'ombre où des particules blanches se lisent le mieux est
+       exactement entre les deux mains (fond à 39/255, aucun pixel au-dessus
+       de 150).
+
+       La toile reste posée PAR-DESSUS la scène et jamais dedans : une toile
+       WebGL placée dans une pièce mise à l'échelle n'est peinte que sur les
+       deux tiers de sa surface (mesuré le 07/09). -->
+  <!-- La fumée d'où naissent les cartes de la salle 2 : devant elles, sous
+       le logo. Elle part avec lui, Three.js étant déjà là. -->
+  <pz-fumee />
+  <pz-particules-logo
+    [logos]="emblemes"
+    piece="projets"
+    [zone]="zoneEmbleme()"
+    [nombre]="nombreEmbleme()"
+    [taillePoint]="taillePoint()"
+    [voisins]="voisins()"
+    [ecartZ]="ecartZ()"
+    [decalage]="0"
+    [rotation]="0"
+    flux="[data-flux=projets]"
+    [fluxVoisins]="placement.fluxVoisins()"
+    [fluxPorteeMin]="placement.fluxPorteeMin()"
+    [fluxPorteeMax]="placement.fluxPorteeMax()"
+    [flottement]="placement.courante().flottement ?? null"
+  />
+}
+
+<pz-reperes [attr.inert]="fond()" />
+<pz-univers />
+
+<!-- LE BOUTON DE LANGUE, sur grand écran : en haut à droite, dans toutes les
+     salles (Paul, 29/09). Au téléphone, il est dans la carte du profil. -->
+@if (nav.format() === 'large') {
+  <pz-bouton-langue class="langue-site" [attr.inert]="fond()" />
+}
+
+<!-- Le diagnostic des vidéos, seulement avec « ?diag » dans l'adresse. -->
+@if (diag) {
+  @defer {
+    <pz-diag-video />
+  }
+}
+
+<!-- LES OUTILS DE RÉGLAGE, MASQUÉS (Paul, 25/09 : les places sont trouvées,
+     « ça nous prend de la place pour rien »). Pas supprimés : ils reviennent
+     en développement avec « ?reglages » dans l'adresse.
+
+     La règle des emblèmes : un curseur pour choisir une taille en la voyant.
+     Rien n'est gardé — elle sert à trouver le nombre, qu'on recopie ensuite
+     dans les constantes de `app.ts`. Le placement libre des textes et du logo
+     de la salle 2 suit le même régime. `when reglages` et pas `@if` seul :
+     sous `@defer`, le morceau part dans un fichier à part que la production
+     ne demande jamais. -->
+@defer (when reglages) {
+  @if (reglages) {
+    <pz-placement-libre [zone]="zoneEmbleme()" />
+  }
+}
+
+@defer (when reglages) {
+  @if (reglages) {
+    <pz-reglage-emblemes
+      [valeur]="largeurEmbleme()"
+      [origine]="largeurOrigine()"
+      [particules]="nombreEmbleme()"
+      [point]="taillePoint()"
+      [liens]="voisins()"
+      [loi]="nombreLoi()"
+      [libre]="nombreLibre()"
+      [ecartX]="ecartX()"
+      [ecartY]="ecartY()"
+      [ecartZ]="ecartZ()"
+      (modifie)="reglerEmbleme($event)"
+      (modifiePoint)="taillePoint.set($event)"
+      (modifieLiens)="voisins.set($event)"
+      (modifieNombre)="reglerNombre($event)"
+      (suivre)="suivreLoi()"
+      (modifieX)="placement.poserLogo({ x: $event })"
+      (modifieY)="placement.poserLogo({ y: $event })"
+      (modifieZ)="ecartZ.set($event)"
+      (remettre)="revenirEmbleme()"
+    />
+  }
+}

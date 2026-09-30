@@ -1,0 +1,102 @@
+<!-- La photo est HORS de `piece__contenu`, et sans opacité à elle.
+
+     C'est ce qui rend le raccord avec la descente pré-calculée exact. Deux
+     calques translucides ne se relaient jamais proprement : à mi-fondu il
+     reste toujours (1-a)(1-b) de fond qui passe au travers, et le fond du
+     seuil étant presque noir, l'écran s'assombrissait de 18 % au passage.
+     Le seul fondu sans creux est celui d'une image OPAQUE que l'autre vient
+     recouvrir. La photo reste donc à pleine opacité : c'est la pyramide qui
+     se pose dessus, et elle la masque entièrement dès qu'elle est entière. -->
+<img
+  class="seuil__photo"
+  [class.seuil--couvert]="couvertParLaDescente()"
+  src="paul-portrait.webp"
+  [attr.alt]="altPhoto()"
+/>
+
+<!-- L'ACCUEIL DU TÉLÉPHONE (Paul, 28/09) : sa photo plein écran, et
+     « Welcome » qui s'écrit dans vingt langues au-dessus. -->
+@if (etroit()) {
+  <div class="seuil__accueil" [attr.aria-hidden]="surLaPhoto() ? null : 'true'">
+    <pz-bienvenue [actif]="accueil()" />
+  </div>
+}
+
+<div
+  class="piece__contenu"
+  [class.seuil--couvert]="couvertParLaDescente()"
+  [style.opacity]="opacite()"
+>
+  <!-- Deux pages : l'entête avec la formation et la 3D, puis le Web3 et la
+       stack complète. Pas de sur-titre (« on sait que c'est un portfolio »,
+       Paul, 24/09). -->
+  <pz-carte-texte
+    class="seuil__carte"
+    salle="seuil"
+    [pagesAvant]="etroit() ? 1 : 0"
+    [attr.inert]="surLaPhoto() ? '' : null"
+  >
+    <ng-template pzPage>
+      <!-- Le bouton de langue, dans la carte au téléphone (Paul, 29/09) ;
+           au bureau, il est en haut à droite de l'écran (`app.html`). -->
+      @if (etroit()) {
+        <pz-bouton-langue class="seuil__langue" />
+      }
+      <h1 class="piece__titre">{{ profil().nom }}</h1>
+      <p class="seuil__titre-poste">{{ profil().titre }}</p>
+      <p class="piece__texte seuil__accroche">{{ profil().accroche }}</p>
+      <div class="seuil__blocs">
+        @for (b of profil().pages[0]; track b.domaine) {
+          <ng-container *ngTemplateOutlet="bloc; context: { $implicit: b }" />
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pzPage>
+      <div class="seuil__blocs">
+        @for (b of profil().pages[1]; track b.domaine) {
+          <ng-container *ngTemplateOutlet="bloc; context: { $implicit: b }" />
+        }
+      </div>
+    </ng-template>
+  </pz-carte-texte>
+
+  <!-- Les liens, à la place de l'ancienne invite « Défilez pour descendre » :
+       toujours visibles, quelle que soit la page de la carte (Paul, 24/09). -->
+  <ul class="seuil__liens" [attr.inert]="surLaPhoto() ? '' : null">
+    @for (lien of profil().liens; track lien.href) {
+      <li>
+        <a class="verre reflet" pzInclinaison [href]="lien.href" target="_blank" rel="noopener">
+          <span class="seuil__lien-long">{{ lien.libelle }}</span>
+          <span class="seuil__lien-court" aria-hidden="true">{{ lien.court }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <ng-template #bloc let-b>
+    <section class="seuil__bloc">
+      <h2 class="seuil__domaine">{{ b.domaine }}</h2>
+      @for (paragraphe of b.paragraphes ?? []; track $index) {
+        <p class="seuil__bloc-texte">{{ paragraphe }}</p>
+      }
+      @if (b.outils) {
+        <ul class="seuil__pile">
+          @for (outil of b.outils; track outil) {
+            <li class="verre">{{ outil }}</li>
+          }
+        </ul>
+      }
+      @for (f of b.familles ?? []; track f.nom) {
+        <div class="seuil__famille">
+          <span class="seuil__famille-nom">{{ f.nom }}</span>
+          <ul class="seuil__pile">
+            @for (outil of f.outils; track outil) {
+              <li class="verre">{{ outil }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+  </ng-template>
+</div>

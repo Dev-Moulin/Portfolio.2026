@@ -1,0 +1,511 @@
+/* Le socle : palette, typographie, et la mise en page plein écran d'une
+   scène qui ne défile jamais (le défilement est capté pour piloter le zoom). */
+
+:root {
+  --encre: #e8eefb;
+  --encre-douce: rgba(232, 238, 251, 0.62);
+  --encre-tenue: rgba(232, 238, 251, 0.34);
+  --accent: #6fd3f7;
+  --accent-chaud: #f7b267;
+  /* L'AMBRE (Paul, 29/09) : les petits titres des cartes (« Ma part », « La
+     suite »…), trop discrets en gris sur ces salles sombres. Entre l'orange
+     des accroches (`--accent-chaud`) et le jaune du nom HERMES-AGENT de la
+     salle Hermès (#ffbf00) — les flammes du seuil sont de cette famille. Un
+     rappel, sans reprendre ni l'un ni l'autre. */
+  --accent-ambre: #f2bd5e;
+  --trait: rgba(111, 211, 247, 0.28);
+  --trait-fort: rgba(111, 211, 247, 0.7);
+
+  /* LE MOUVEMENT DE RÉFÉRENCE (Paul, 23/09) : l'arrivée des cartes dans la
+     salle 2. Tout ce qui se déplace ou apparaît en dehors du zoom — texte
+     des salles, carte qui s'ouvre et se referme, ses lignes — suit cette
+     durée et cette courbe, pour que tout bouge à la même vitesse. */
+  --mouvement: 1.9s;
+  --mouvement-courbe: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --fond-seuil: #0a0a0a; /* noir neutre (23/09) : c'est lui qu'on voit dès que la trame s'éteint */
+  --fond-projets: #0b1322;
+  --fond-orchestrateur: #0e1526;
+  --fond-portfolio3d: #05070f;
+
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--fond-seuil);
+  color: var(--encre);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Le clavier doit toujours voir où il est, même par-dessus le zoom. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Réservé aux lecteurs d'écran : le plan du site en texte, pour que le
+   contenu reste atteignable sans piloter une caméra. */
+.pour-lecteur {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Le contenu des pièces est dimensionné en unités de conteneur pour grossir
+   avec le zoom : quand une pièce remplit l'écran, 1 cqw vaut 1 % de l'écran.
+   `--unite` dit LAQUELLE des deux dimensions sert de référence, `--texte`
+   règle l'échelle.
+
+   Pourquoi un `min` de deux mesures : la hauteur qu'occupe un paragraphe
+   varie comme le CARRÉ de sa taille de police divisé par la largeur de sa
+   colonne (une police deux fois plus grande double la hauteur de ligne ET
+   double le nombre de lignes). Une taille sûre suit donc √(largeur × hauteur),
+   qu'on encadre par le plus petit des deux termes. Le coefficient 1,78 est
+   choisi pour qu'un écran 16/9 rende exactement ce que rendait 1 cqw. */
+:root {
+  --unite: min(1cqw, 1.78cqh);
+  --texte: 1;
+}
+
+/* En portrait — téléphone comme tablette —, tout est empilé : la contrainte
+   n'est plus la largeur mais la HAUTEUR :
+   toute la matière d'une pièce doit tenir sur un écran qu'on ne peut pas
+   faire défiler (le geste vertical appartient déjà à la profondeur). Un texte
+   calibré sur la largeur enfle sur un écran large-et-court — un 500 × 900
+   débordait là où un 390 × 844 tenait. Calibré sur la hauteur, le rapport
+   entre la matière et la place disponible ne change plus.
+   (1,48 × 1 cqh reproduit exactement 3,2 × 1 cqw sur un 390 × 844.) */
+@media (orientation: portrait) and (max-width: 900px) {
+  :root {
+    --unite: 1cqh;
+    --texte: 1.48;
+  }
+}
+
+/* — Les pièces —
+   Depuis le 23/09, une pièce est un CALQUE de la taille de l'écran, posé à
+   côté des autres dans `.vue` et plus jamais dans une ouverture de la pièce
+   précédente. Sa place à l'écran vient d'un `transform` à elle, posé par
+   `PieceBase` (`transformationSalle`) : `none` dans la salle où l'on est.
+
+   Pourquoi : emboîtées, les salles étaient grossies ×457 (la salle 2, au fond
+   du « H ») et ×3 000 (la salle Hermès). Le navigateur arrondit une position
+   au demi-pixel d'écran avant de grossir ; sur les écrans de Paul (densité
+   1,1 et 1,25), la salle 2 était peinte 150 à 200 px à côté de sa place.
+
+   Toujours mise en page à la taille de l'écran, y compris quand elle apparaît
+   réduite en aperçu : un `transform` réduit un texte déjà composé, il reste
+   net et correctement interligné. `container-type` la déclare comme
+   référence des unités `cqw` de son propre contenu. */
+.piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  container-type: size;
+  overflow: hidden;
+  /* Interligne TOUJOURS explicite dans la scène. `line-height: normal` fait
+     lire les métriques de la fonte, que le moteur arrondit à l'entier de
+     pixel — or au fond de la descente une police fait 1,26 px dans le repère
+     local avant grossissement. La boîte de ligne tombe alors sous la taille
+     des glyphes, qui débordent sur le paragraphe suivant. Un multiple sans
+     unité, lui, reste exact au sous-pixel. */
+  line-height: 1.5;
+}
+
+/* Une salle qui n'est qu'un aperçu — celle où l'on arrive, ou la carte du
+   portfolio 3D vue depuis la salle Hermès — laisse passer le pointeur : le
+   clic appartient au cadre posé par-dessus (`pz-portes`). */
+.piece--apercu {
+  pointer-events: none;
+}
+
+/* Le contenu textuel d'une pièce s'efface quand la caméra la dépasse
+   (opacité pilotée par coeur/presentation.ts). Les ouvertures, elles,
+   restent : ce sont elles qui donnent la sensation d'emboîtement. */
+.piece__contenu {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.piece__contenu a,
+.piece__contenu button {
+  pointer-events: auto;
+}
+
+.piece__bloc {
+  position: absolute;
+}
+
+.piece__sur-titre {
+  margin: 0 0 1cqw;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.8 * var(--unite, 1cqw));
+  letter-spacing: 0.22em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.piece__titre {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: calc(var(--texte, 1) * 5.2 * var(--unite, 1cqw));
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+}
+
+.piece__texte {
+  margin: 0;
+  font-size: calc(var(--texte, 1) * 1.15 * var(--unite, 1cqw));
+  line-height: 1.65;
+  color: var(--encre-douce);
+}
+
+/* Les grands titres n'ont pas besoin du même rattrapage que le corps de
+   texte : à 3,2 ils occuperaient la moitié de l'écran. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .piece__titre {
+    font-size: calc(var(--texte, 1) * 3.2 * var(--unite, 1cqw));
+  }
+}
+
+.piece__mono {
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.82 * var(--unite, 1cqw));
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--encre-tenue);
+}
+
+/* — Les filets —
+   Une bordure de moins d'un pixel local est arrondie à 1 px par le moteur de
+   rendu, puis multipliée par le grossissement : un trait censé faire 1 px à
+   l'écran en fait 8 au fond de la descente. Un fond dégradé, lui, n'est pas
+   arrondi. C'est pour ça que les séparateurs passent par `background`. */
+.filet-haut {
+  background-image: linear-gradient(rgba(232, 238, 251, 0.14), rgba(232, 238, 251, 0.14));
+  background-repeat: no-repeat;
+  background-position: top left;
+  background-size: 100% 0.07cqw;
+}
+
+.filet-gauche {
+  background-image: linear-gradient(var(--trait-fort), var(--trait-fort));
+  background-repeat: no-repeat;
+  background-position: top left;
+  background-size: 0.14cqw 100%;
+}
+
+/* L'APPARITION D'UN VERRE, de 0 (rien) à 1 (la carte telle qu'on la connaît).
+   Déclarée pour pouvoir être ANIMÉE : une variable ordinaire saute d'une
+   valeur à l'autre, une variable typée se transitionne comme une longueur.
+   C'est par elle que les cartes de la salle 2 naissent de la fumée — leur
+   flou, leur voile, leur arête et leur ombre montent ensemble
+   (`vignette.css`), là où une opacité couperait le flou. Elle vaut 1 partout
+   où rien ne la pose : aucun autre verre n'en est changé. */
+@property --apparition {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+/* — LE VERRE —
+   
+   La matière commune à toutes les cartes, pastilles et boutons du portfolio.
+   Décision de Paul, le 11/09 : « les autres cartes dans la salle 2, enfin
+   toutes les cartes en fait, vont utiliser la même chose que ce qu'on a fait
+   sur la carte de la page 1 […] c'est un composant qu'on va réutiliser pour
+   toutes les cartes et la plupart des boutons ».
+   
+   POURQUOI UNE CLASSE GLOBALE ET PAS UN COMPOSANT ANGULAR. Il n'y a rien à
+   exécuter ici : pas d'état, pas d'entrée, pas de gabarit. Un composant
+   d'enrobage ajouterait un élément dans l'arbre, un jeu d'attributs
+   d'encapsulation et une couche de mise en page à contourner, pour rendre
+   exactement ces déclarations-là. La classe se pose sur l'élément qui existe
+   déjà, quel qu'il soit, et les quatre variables suffisent à l'accorder.
+   
+   DEUX COUCHES. Le voile sombre tient le contraste du texte ; le dégradé clair
+   du haut vers le bas donne l'inclinaison d'une vitre.
+   
+   L'ARÊTE. Ce n'est pas un trait peint, c'est une TRANCHE DE MATIÈRE : un
+   anneau qui filtre à son tour ce qu'il y a derrière lui, plus fort que la
+   face. Là où la face adoucit et assombrit, l'arête éclaircit et sature —
+   comme la tranche d'une vitre, qui concentre la lumière qu'elle conduit.
+   Elle bouge donc toute seule quand le fond bouge, et elle réagit à la souris
+   pour la même raison, sans une ligne de JavaScript.
+   
+   L'anneau se découpe en masquant le rectangle par lui-même moins son
+   intérieur (`mask-composite: exclude`), la bande restante ayant l'épaisseur
+   du `padding`. C'est la seule façon d'obtenir un anneau à coins arrondis qui
+   porte son propre `backdrop-filter` : une vraie `border` ne filtre rien, et
+   deux éléments superposés ne suivraient pas le rayon.
+   
+   `--verre-arete` est en PIXELS et non en `cqw`, parce qu'une arête est une
+   épaisseur de matière et non une proportion de la carte : en proportion, elle
+   doublerait sur un grand écran et le biseau deviendrait un cadre. */
+.verre {
+  --verre-rayon: 1.5cqw;
+  --verre-arete: 1.5px;
+  --verre-flou: 1.7cqw;
+  --verre-voile: rgba(8, 12, 22, 0.52);
+  --verre-ombre:
+    0 1.1cqw 3.4cqw rgba(0, 0, 0, 0.38), 0 0.2cqw 0.8cqw rgba(0, 0, 0, 0.22),
+    inset 0 0.08cqw 0 rgba(232, 238, 251, 0.16);
+
+  position: relative;
+  border-radius: var(--verre-rayon);
+  background:
+    linear-gradient(
+      160deg,
+      rgba(232, 238, 251, 0.075) 0%,
+      rgba(232, 238, 251, 0.022) 42%,
+      rgba(232, 238, 251, 0) 100%
+    ),
+    var(--verre-voile);
+  box-shadow: var(--verre-ombre);
+}
+
+/* La haute lumière court sur deux arêtes opposées et s'éteint au milieu :
+   c'est ce que fait un biseau éclairé d'en haut à gauche. Une bordure
+   d'opacité constante ferait un cadre, pas une tranche. */
+.verre::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--verre-arete);
+  pointer-events: none;
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.12) 26%,
+    rgba(255, 255, 255, 0.04) 54%,
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0.42) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Le flou est séparé du reste : sans `backdrop-filter`, la carte doit rester
+   lisible, donc son voile s'opacifie au lieu de laisser passer le fond. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .verre {
+    --verre-voile: rgba(8, 12, 22, 0.42);
+    /* `saturate` avant `blur` : c'est ce qui garde une trace de la couleur du
+       moment dans le verre, au lieu d'un gris. */
+    -webkit-backdrop-filter: saturate(1.7) blur(var(--verre-flou));
+    backdrop-filter: saturate(1.7) blur(var(--verre-flou));
+  }
+
+  /* Le contraire de la face, et c'est tout le propos : la face éteint pour
+     tenir le texte, l'arête rallume. Le flou y est cinq fois plus court, donc
+     l'arête garde une trace du DESSIN du fond là où la face n'en garde que la
+     couleur. */
+  .verre::after {
+    -webkit-backdrop-filter: brightness(1.7) saturate(2.6) blur(calc(var(--verre-flou) / 5.5));
+    backdrop-filter: brightness(1.7) saturate(2.6) blur(calc(var(--verre-flou) / 5.5));
+  }
+}
+
+/* Un visiteur qui a demandé moins de transparence reçoit une carte pleine :
+   le verre est un agrément, la lisibilité ne l'est pas. */
+@media (prefers-reduced-transparency: reduce) {
+  .verre {
+    background: #0b0f19;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .verre::after {
+    background: rgba(232, 238, 251, 0.22);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* L'outil de placement libre (développement seulement, `placement-libre.ts`) :
+   ce qu'on peut attraper montre une main, et un contour au survol. */
+.placement-libre-main body {
+  cursor: grab;
+}
+.placement-libre-actif [data-placement][data-survole] {
+  outline: 1px dashed rgba(232, 238, 251, 0.4);
+  outline-offset: 0.4rem;
+}
+.placement-libre-tire,
+.placement-libre-tire * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* LE VERRE QU'ON PRESSE (Paul, 27/09) — les vignettes de la salle 2, et les
+   boutons de liens de la carte ouverte. Posé avec la directive
+   `pzInclinaison` (`vignette/inclinaison.ts`), sur l'élément ou sur un
+   ancêtre : elle ne fait que poser les variables, qui descendent.
+
+   Là où est la souris, la carte
+   s'enfonce de quelques degrés (`inclinaison.ts` pose les variables), et un
+   reflet glisse du côté qui se soulève. `scale` la garde dans son ouverture,
+   qui la découpe : le bord qui avance grossit d'environ 2 %.
+
+   La transition fait tout le liant : la carte suit la souris avec un léger
+   retard, et revient à plat en douceur quand elle part — ou au clic, pour que
+   la carte ouverte parte d'une vignette à plat. */
+.reflet {
+  transform: perspective(1100px) rotateX(calc(var(--incl-x, 0) * 1deg))
+    rotateY(calc(var(--incl-y, 0) * 1deg)) scale(calc(1 - 0.022 * var(--appui, 0)));
+  transition: transform 0.5s var(--mouvement-courbe);
+}
+.reflet::before {
+  /* LE REFLET D'UNE VITRE (Paul, 27/09, sur image) : une seule lumière, qui
+     GLISSE quand la carte penche, sans changer de nature.
+     - une diagonale nette : une moitié de la carte un peu plus claire ;
+     - des traînées fines, parallèles, qui glissent plus vite qu'elle (c'est
+       ce décalage qui donne la profondeur) ;
+     - des éclats sur l'arête, du côté qui se soulève.
+     `--px`/`--py` : la souris, de -0,5 à 0,5 depuis le centre
+     (`inclinaison.ts`). Souris à gauche, tout glisse vers la droite. */
+  --angle: calc(135deg + var(--px, 0) * 16deg);
+  --ex: max(var(--px, 0), calc(-1 * var(--px, 0)));
+  --ey: max(var(--py, 0), calc(-1 * var(--py, 0)));
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    /* l'éclat sur l'arête haute ou basse, à l'opposé de la souris */
+    radial-gradient(
+      ellipse 16% 3% at calc(50% - var(--px, 0) * 70%)
+        calc(1% + clamp(0, 0.5 - var(--py, 0) * 1000, 1) * 98%),
+      rgba(255, 255, 255, calc(1.6 * var(--ey))),
+      rgba(255, 255, 255, 0) 70%
+    ),
+    /* l'éclat sur l'arête gauche ou droite */
+    radial-gradient(
+      ellipse 1.8% 18% at calc(0.6% + clamp(0, 0.5 - var(--px, 0) * 1000, 1) * 98.8%)
+        calc(50% - var(--py, 0) * 70%),
+      rgba(255, 255, 255, calc(1.6 * var(--ex))),
+      rgba(255, 255, 255, 0) 70%
+    ),
+    /* les traînées */
+    linear-gradient(
+      var(--angle),
+      rgba(255, 255, 255, 0) 52.75%,
+      rgba(255, 255, 255, 0.09) 53.575%,
+      rgba(255, 255, 255, 0) 54.95%,
+      rgba(255, 255, 255, 0) 55.775%,
+      rgba(255, 255, 255, 0.055) 56.325%,
+      rgba(255, 255, 255, 0) 57.975%,
+      rgba(255, 255, 255, 0) 60.45%,
+      rgba(255, 255, 255, 0.07) 61.275%,
+      rgba(255, 255, 255, 0) 62.65%
+    ),
+    /* la diagonale nette */
+    linear-gradient(
+      var(--angle),
+      rgba(255, 255, 255, 0.11) 22.5%,
+      rgba(255, 255, 255, 0.06) 49.835%,
+      rgba(255, 255, 255, 0) 50%
+    );
+  background-repeat: no-repeat;
+  /* L'image du reflet est QUATRE fois la carte (Paul, 27/09, sur croquis) :
+     elle a de la réserve tout autour, et même souris collée à un bord, elle
+     couvre encore toute la carte — à 2,2 fois, son bord entrait dans la
+     carte et le reflet s'y coupait net. Les arrêts des dégradés sont
+     resserrés d'autant (0,55 = 2,2 / 4, autour de 50 %), et le glissement
+     réduit d'autant (×3 de réserve au lieu de ×1,2) : à l'écran, traînées
+     et diagonale ont la même largeur et le même mouvement qu'avant. */
+  background-size: 100% 100%, 100% 100%, 400% 400%, 400% 400%;
+  background-position:
+    0 0,
+    0 0,
+    calc(50% + var(--px, 0) * 48%) calc(50% + var(--py, 0) * 48%),
+    calc(50% + var(--px, 0) * 28%) calc(50% + var(--py, 0) * 28%);
+  /* Le reflet est un enfant du verre, pas un ancêtre : son opacité ne touche
+     pas au flou. */
+  opacity: calc(var(--appui, 0) * var(--apparition, 1));
+  transition: opacity 0.6s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reflet {
+    transform: none;
+  }
+  .reflet::before {
+    display: none;
+  }
+}
+
+/* TÉLÉPHONE : la hauteur que la barre des repères prend en bas de l'écran,
+   étiquette de la salle comprise (`reperes.css` : bas de la barre, case de
+   2,9 rem, étiquette de 0,72 rem posée au-dessus). Ce qui est posé dans une
+   salle s'arrête au-dessus — sinon ça passe sous l'étiquette (Paul, 28/09). */
+@media (orientation: portrait) and (max-width: 900px) {
+  :root {
+    --reserve-bas: calc(max(0.7rem, env(safe-area-inset-bottom)) + 4.9rem);
+  }
+
+  /* PAS DE REBOND (Paul, 28/09). Sur iPhone, glisser vers le haut tirait
+     toute la page d'un cran, même sans rien à faire défiler, et laissait
+     voir ce qu'il y a derrière. Le geste appartient au site (il change de
+     salle ou de page, `app.ts`) : le navigateur n'a ni à faire défiler ni à
+     rebondir. Ce qui défile vraiment (la carte ouverte d'un projet) est son
+     propre conteneur de défilement, et garde son geste. */
+  html,
+  body {
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  /* SAUF CARTE OUVERTE (Paul, 29/09 : « il y a des endroits où tu peux
+     pas »). Safari ne s'arrête pas au conteneur qui défile pour calculer
+     ce que le doigt a le droit de faire : il croise AUSSI le `none` de la
+     page et de l'application, et la carte ne défilait plus que par
+     endroits. Tant qu'une carte est ouverte (`univers.ts`), la page rend
+     donc le glissement vertical au navigateur ; le rebond reste coupé. */
+  html.univers-ouvert,
+  html.univers-ouvert body,
+  html.univers-ouvert app-root {
+    touch-action: pan-y;
+  }
+}
+
+/* Le bouton de langue du grand écran (`app.html`) : en haut à droite, au bord
+   des repères, hors de la scène. */
+.langue-site {
+  position: fixed;
+  top: clamp(0.9rem, 2vw, 1.6rem);
+  right: clamp(0.9rem, 2vw, 1.6rem);
+  z-index: 25;
+}

@@ -1,0 +1,351 @@
+/* Le seuil n'a plus de fond à lui : c'est `pz-trame` qui le peint, plein
+   écran et derrière la scène. Les dégradés d'origine ont déménagé là-bas,
+   où ils servent de repli quand WebGL2 manque. Transparent, et pas un fond
+   plus sombre : tout ce qui est peint ici recouvrirait la trame. */
+:host {
+  background: transparent;
+}
+
+/* La photo occupe la colonne gauche en plein cadre — c'est elle qui porte
+   le passage : l'ouverture vers « projets » est posée dedans, dans le noir
+   du tee-shirt (voir `coeur/contenu.ts`), invisible, purement au défilement. */
+.seuil__photo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* La carte de verre.
+   
+   POURQUOI ELLE EXISTE. Depuis que le fond du seuil est une trame animée qui
+   change de couleur, le texte n'a plus de fond stable sous lui : il lui faut
+   un support à lui, sans quoi la lisibilité dépendrait de la couleur du
+   moment.
+
+   POURQUOI UN TEINTÉ SOMBRE ET NEUTRE, ET PAS UN BLANC LAITEUX. Le verre
+   d'Apple pose du blanc translucide sur des interfaces claires. Ici le fond
+   défile sur cinq teintes : un voile blanc prendrait la couleur du moment et
+   le texte clair perdrait son contraste toutes les cinq secondes. Le voile
+   est donc le noir de la page, et c'est le FLOU qui fait le verre.
+
+   POURQUOI TOUT EST EN `cqw`. La pièce est déclarée `container-type: size` et
+   la scène la met à l'échelle : une valeur en pixels resterait figée pendant
+   que le texte grossit. En unités de conteneur, le rayon, le flou, la marge
+   et l'ombre suivent le zoom comme le reste. */
+.seuil__carte {
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  /* MESURÉE SUR LE CONTENU, et exprimée dans l'unité DU TEXTE.
+  
+     La ligne la plus longue est la rangée de liens : 37,2 unités. Avec ses
+     deux marges, la carte en demande 43 — à 50 % de large elle traînait près
+     de 10 unités de vide à droite et passait sous les repères.
+  
+     Mais un pourcentage d'écran ne convient pas : `--unite` vaut
+     `min(1cqw, 1.78cqh)`, donc sur un écran plus large que 16/9 le texte
+     rétrécit par rapport à la largeur — 7 % de moins en 1,91:1. Une carte en
+     pourcentage y reprendrait du vide, et une carte réglée sur cet écran-là
+     ferait passer les liens à la ligne en 16/9. En multipliant `--unite`, la
+     carte suit exactement ce que fait le texte, sur toutes les proportions. */
+  /* Cette largeur est devenue LE GABARIT de toutes les cartes de texte, avec
+     la hauteur de ce contenu (Paul, 23/09) : il vit maintenant dans
+     `pz-carte-texte`, avec les marges et le verre. Ici, seule la place. */
+  transform: translateY(-50%);
+}
+
+.seuil__titre-poste {
+  margin: 1.6cqw 0 0;
+  font-size: calc(var(--texte, 1) * 1.35 * var(--unite, 1cqw));
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--encre);
+}
+
+.seuil__accroche {
+  margin-top: 1.4cqw;
+}
+
+/* Un bloc : le domaine en petites capitales, une ou deux phrases, la stack. */
+.seuil__blocs {
+  display: grid;
+  gap: 1.8cqw;
+  margin: 2.2cqw 0 0;
+}
+.seuil__blocs:first-child {
+  margin-top: 0;
+}
+
+.seuil__bloc {
+  padding-top: 1.2cqw;
+  border-top: 0.08cqw solid rgba(232, 238, 251, 0.16);
+}
+/* Une page sans entête (la page 2) : ses blocs se répartissent sur toute la
+   hauteur de la carte. L'entête de la page 1 en prend près de la moitié ;
+   sans ça, la page 2 finissait à mi-hauteur et paraissait vide (Paul, 24/09). */
+.seuil__blocs:only-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+  gap: 0;
+}
+
+/* En tête de page, le filet n'a rien à séparer. */
+.seuil__blocs:first-child > .seuil__bloc:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.seuil__domaine {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: calc(var(--texte, 1) * 0.72 * var(--unite, 1cqw));
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  /* L'ambre des petits titres de toutes les cartes (Paul, 29/09), qui
+     répond aux flammes de la photo. */
+  color: var(--accent-ambre);
+}
+
+.seuil__bloc-texte {
+  margin: 0.6cqw 0 0;
+  font-size: calc(var(--texte, 1) * 0.98 * var(--unite, 1cqw));
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+/* LES OUTILS EN BULLES (Paul, 28/09) : les mêmes pastilles de verre que les
+   cartes de la salle 2, plus de barres verticales entre les noms. En `em`,
+   pour suivre la taille de texte de la carte, au bureau comme au téléphone. */
+.seuil__pile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.8em 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.7 * var(--unite, 1cqw));
+  line-height: 1.4;
+}
+
+.seuil__pile li {
+  --verre-rayon: 999px;
+  --verre-arete: 1px;
+  --verre-flou: 1.2cqw;
+  --verre-voile: rgba(10, 10, 11, 0.58);
+  --verre-ombre:
+    0 0.25em 0.8em rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(232, 238, 251, 0.16);
+  padding: 0.3em 0.95em;
+  color: var(--encre-douce);
+}
+
+/* La stack complète : une ligne par famille, son nom devant ses bulles. */
+.seuil__famille {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 0.9em;
+  margin-top: 0.7em;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.7 * var(--unite, 1cqw));
+}
+.seuil__famille .seuil__pile {
+  margin: 0;
+  font-size: inherit;
+}
+.seuil__famille-nom {
+  color: var(--encre-douce);
+}
+
+/* Les liens : trois bulles du même verre que les pastilles de la salle 2,
+   posées sous la carte, là où était l'invite. Calées sur ELLE (Paul, 24/09) :
+   la première sur son bord gauche, la deuxième sur son centre, la dernière
+   sur son bord droit. Une grille `1fr auto 1fr` et pas `space-between` :
+   avec des liens de longueurs différentes, `space-between` décalerait celui
+   du milieu. */
+.seuil__liens {
+  position: absolute;
+  left: 40%;
+  bottom: 4.5%;
+  width: calc(46 * var(--unite, 1cqw)); /* la largeur du gabarit des cartes */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.seuil__liens li:first-child {
+  justify-self: start;
+}
+.seuil__liens li:last-child {
+  justify-self: end;
+}
+
+.seuil__liens a {
+  display: block;
+  padding: 0.7cqw 1.4cqw;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.8 * var(--unite, 1cqw));
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: var(--encre);
+  text-decoration: none;
+  --verre-rayon: 999px;
+  --verre-arete: 1px;
+  --verre-flou: 1.2cqw;
+  --verre-ombre:
+    0 0.5cqw 1.6cqw rgba(0, 0, 0, 0.32), inset 0 0.08cqw 0 rgba(232, 238, 251, 0.14);
+}
+
+.seuil__lien-court {
+  display: none;
+}
+
+.seuil__liens a:hover,
+.seuil__liens a:focus-visible {
+  --verre-voile: rgba(40, 46, 60, 0.62);
+}
+
+/* Sur un écran étroit, la carte prend toute la largeur sous l'ouverture. */
+/* Étroit : l'ouverture occupe le haut (3 % → 39 %), la carte prend la bande
+   du dessous, les liens restent collés au bas. */
+@media (orientation: portrait) and (max-width: 900px) {
+  /* L'ACCUEIL ET LA CARTE, L'UN SOUS L'AUTRE (Paul, 29/09 ; côte à côte
+     le 28/09). L'écran n'en montre qu'un à la fois, et on descend toujours :
+     la photo monte pour laisser venir la carte, la carte monte pour laisser
+     revenir la photo avant le plongeon. Les glissements sont joués par
+     `seuil.ts`, qui sait dans quel sens on va ; ici, seulement le repos : ce
+     qui est caché attend sous l'écran. */
+  .seuil__photo {
+    width: 100%;
+    translate: 0 110vh;
+  }
+  :host(.seuil--sur-la-photo) .seuil__photo {
+    translate: 0 0;
+  }
+  :host(.seuil--sur-la-photo) .seuil__carte,
+  :host(.seuil--sur-la-photo) .seuil__liens {
+    translate: 0 110vh;
+  }
+  .seuil__accueil {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: max(1.4rem, env(safe-area-inset-top));
+    text-align: center;
+    translate: 0 110vh;
+    pointer-events: none;
+  }
+  :host(.seuil--sur-la-photo) .seuil__accueil {
+    translate: 0 0;
+  }
+  /* Le mot de bienvenue est celui de l'ACCUEIL seulement : pendant les
+     passages vers la salle 2 et retour, la photo passe sans lui. */
+  .seuil__accueil {
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  :host(.seuil--accueil) .seuil__accueil {
+    opacity: 1;
+  }
+
+  /* La page 2 part du haut, comme la page 1, au lieu de répartir ses deux
+     blocs sur toute la hauteur : sur téléphone, ça faisait un grand vide
+     au-dessus et un autre entre eux (Paul, 28/09). */
+  .seuil__blocs:only-child {
+    justify-content: flex-start;
+    gap: 5cqw;
+  }
+
+  .seuil__carte {
+    left: 4%;
+    transform: none;
+    /* La largeur, les marges et l'arrondi du portrait sont ceux du gabarit
+       (`carte-texte.css`). */
+    /* Du haut de l'écran jusqu'aux liens : plus de bande vide au-dessus
+       (Paul, 28/09). La hauteur n'est plus celle du gabarit : c'est la
+       place qui reste. */
+    top: max(1rem, env(safe-area-inset-top));
+    /* Les liens (2,4 rem avec leur espace), puis les points des pages dans
+       une bande de 3 rem : assez d'air pour qu'on les voie (Paul, 28/09). */
+    bottom: calc(var(--reserve-bas) + 6rem);
+    height: auto;
+    /* La carte rend au texte la hauteur qu'elle lui prend en marges. 1,48 est
+       l'échelle du portrait (voir `styles.css`) ; la carte descend à 1,36,
+       soit 8 % de hauteur de texte — exactement ce que coûtent ses marges et
+       son liseré. Sans ça, le dernier lien passe sous la pastille du bas. */
+    /* Mesuré le 28/09 sur 360 × 560, 375 × 640 (iPhone, barres de Chrome
+       comprises) et 390 × 844 : à 2, la page 1 remplit 85 à 95 % de la
+       carte sans jamais déborder. À 1,36 elle s'arrêtait à mi-hauteur. */
+    --texte: 1.85;
+    /* LA HAUTEUR EST UN BUDGET FERMÉ. En portrait, la matière de la pièce
+       doit tenir sur un écran qu'on ne peut pas faire défiler (le geste
+       vertical appartient déjà à la profondeur). Les marges de la carte
+       viennent donc EN REMPLACEMENT des écarts internes, pas en plus :
+       sans quoi les liens du bas sortent par le bord — mesuré sur 390×844,
+       ils étaient purement et simplement coupés. */
+  }
+  .seuil__bloc-texte {
+    font-size: calc(var(--texte, 1) * 0.92 * var(--unite, 1cqw));
+  }
+  /* Les liens passent au-dessus de la barre des repères, alignés sur la
+     carte ; ils vont à la ligne s'il le faut. */
+  /* Entre le bas de la carte (83 % de 844 px) et le nom de la salle posé
+     sur la barre des repères (90 %). */
+  /* Au-dessus de la barre des repères, quelle que soit la hauteur de
+     l'écran (Paul, 28/09 : sur iPhone, les barres du navigateur mangent
+     200 px et les liens passaient sous l'étiquette de la salle). */
+  .seuil__liens {
+    bottom: var(--reserve-bas);
+    left: 4%;
+    width: 92%; /* la largeur de la carte en portrait */
+    gap: 2cqw;
+  }
+  /* Un peu plus grands (Paul, 28/09) : la bande libérée sous les points des
+     pages leur laisse la place. */
+  .seuil__liens a {
+    padding: 2cqw 4.2cqw;
+    font-size: calc(var(--texte, 1) * 0.98 * var(--unite, 1cqw));
+  }
+  /* Les trois adresses ne tiennent pas côte à côte sur 390 px : leurs noms
+     courts. Le lien lu reste l'adresse entière (`aria-label` implicite du
+     texte long, masqué visuellement seulement). */
+  .seuil__lien-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .seuil__lien-court {
+    display: inline;
+  }
+}
+
+/* Ce que la descente pré-calculée recouvre entièrement n'a plus à être peint.
+   `display: none` et pas `opacity: 0` : il faut que l'élément sorte de la
+   mise en page. Sans ça, le navigateur continue d'agrandir la photo avec le
+   zoom — 19 000 px de large aux trois quarts de la descente, au-delà du
+   plafond de texture de 16 384 px — et le re-tramage fait sauter l'animation. */
+.seuil--couvert {
+  display: none;
+}
+
+/* LE BOUTON DE LANGUE, dans la carte au téléphone (Paul, 29/09) : en haut à
+   droite de la première page. */
+.seuil__langue {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+}

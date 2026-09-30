@@ -1,0 +1,19 @@
+/* La fumée est posée par-dessus la scène, comme le logo : devant les cartes
+   (salle 2, au niveau 1), sous le logo (6) et les repères (10). Au même niveau
+   que la descente (5), mais après elle dans la page, donc devant.
+
+   La toile est calculée au tiers de l'écran (`fumee.ts`) et agrandie ici :
+   l'agrandissement lisse du navigateur est exactement le flou d'une fumée. */
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.fumee__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

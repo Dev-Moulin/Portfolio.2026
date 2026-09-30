@@ -1,0 +1,86 @@
+:host {
+  background: var(--fond-portfolio3d);
+}
+
+/* Un champ d'étoiles en pur CSS : pas d'image à charger, et il reste net
+   quel que soit le grossissement. */
+.ciel {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(0.11cqw 0.11cqw at 18% 22%, rgba(232, 238, 251, 0.9), transparent),
+    radial-gradient(0.09cqw 0.09cqw at 72% 14%, rgba(232, 238, 251, 0.7), transparent),
+    radial-gradient(0.13cqw 0.13cqw at 41% 68%, rgba(111, 211, 247, 0.8), transparent),
+    radial-gradient(0.09cqw 0.09cqw at 88% 55%, rgba(232, 238, 251, 0.6), transparent),
+    radial-gradient(0.08cqw 0.08cqw at 9% 79%, rgba(232, 238, 251, 0.5), transparent),
+    radial-gradient(0.14cqw 0.14cqw at 60% 88%, rgba(247, 178, 103, 0.7), transparent),
+    radial-gradient(0.08cqw 0.08cqw at 31% 39%, rgba(232, 238, 251, 0.45), transparent),
+    radial-gradient(70% 50% at 50% 50%, rgba(111, 211, 247, 0.07), transparent 70%);
+  background-size: 9% 11%, 13% 17%, 17% 21%, 11% 14%, 7% 9%, 19% 23%, 15% 19%, 100% 100%;
+}
+
+.ciel--dense {
+  opacity: 0.9;
+  filter: brightness(1.4);
+}
+
+.p3d__entete {
+  position: absolute;
+  left: 5%;
+  top: 14%;
+  width: 34%;
+}
+
+.p3d__baseline {
+  margin: 1.2cqw 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: calc(var(--texte, 1) * 1.5 * var(--unite, 1cqw));
+  line-height: 1.3;
+  color: var(--accent);
+}
+
+.p3d__texte {
+  position: absolute;
+  left: 5%;
+  bottom: 12%;
+  width: 32%;
+}
+
+.p3d__hublot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(60% 60% at 50% 50%, #0a1526, #03050c);
+}
+
+.p3d__hublot-texte {
+  position: relative;
+  margin: 0;
+  font-family: var(--mono);
+  max-width: 86%;
+  font-size: calc(var(--texte, 1) * 1.2 * var(--unite, 1cqw));
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--encre);
+  text-shadow: 0 0 2cqw rgba(111, 211, 247, 0.6);
+}
+
+.p3d__hublot-texte span {
+  color: var(--accent);
+}
+
+/* Étroit : l'ouverture est centrée (30 % → 100 %), le texte l'encadre. */
+/* Étroit : entête (5 % → 24 %), hublot (26 % → 76 %), texte en dessous. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .p3d__entete { left: 6%; top: 5%; width: 88%; }
+  .p3d__texte {
+    left: 6%;
+    top: 79%;
+    bottom: auto;
+    width: 86%;
+  }
+  .p3d__hublot-texte { font-size: calc(var(--texte, 1) * 0.85 * var(--unite, 1cqw)); }
+}

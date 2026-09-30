@@ -1,0 +1,104 @@
+/* LE GABARIT UNIQUE : celui de la carte du seuil, mesuré le 23/09 — 46 unités
+   de texte de large (sa rangée de liens, marges comprises), 42 de haut (son
+   contenu faisait 40,5 à 41 unités sur trois écrans ; une de plus pour ne
+   jamais le rogner). En unités de texte et pas en pour cent d'écran : la
+   carte suit exactement ce que fait le texte, sur toutes les proportions.
+   Chaque salle ne décide que de sa POSITION. */
+:host {
+  display: block;
+  width: calc(46 * var(--unite, 1cqw));
+  height: calc(42 * var(--unite, 1cqw));
+}
+
+/* Une page = une carte de verre, au gabarit. Hors de l'écran quand on ne la
+   lit pas. Rien que `translate` — pas d'opacité : sur le verre, elle
+   couperait le flou d'arrière-plan pendant tout le mouvement. */
+.carte-texte__page {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  padding: 2.6cqw 2.9cqw 2.9cqw;
+  translate: 0 0;
+  transition: translate var(--mouvement) var(--mouvement-courbe);
+}
+
+/* 110 % de la hauteur de la salle : quelle que soit la place de la carte,
+   c'est assez pour qu'elle sorte entièrement de l'écran. */
+.carte-texte__page--lue {
+  translate: 0 -110cqh;
+}
+.carte-texte__page--suivante {
+  translate: 0 110cqh;
+}
+
+/* Les points : une colonne contre le bord droit de la carte, un par page. Le
+   dessin est celui des repères de profondeur. */
+.carte-texte__points {
+  position: absolute;
+  left: calc(100% + 1.4cqw);
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte-texte__point {
+  display: block;
+  width: 0.78rem;
+  height: 0.78rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--encre-tenue);
+  cursor: pointer;
+  transition:
+    transform 240ms ease,
+    background 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.carte-texte__point:hover,
+.carte-texte__point:focus-visible {
+  outline: none;
+  background: var(--encre);
+}
+
+.carte-texte__point--actif {
+  background: var(--encre);
+  transform: scale(1.45);
+  box-shadow: 0 0 0 0.42rem rgba(232, 238, 251, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-texte__page {
+    transition: none;
+  }
+}
+
+/* Téléphone : toute la largeur, et la hauteur de la carte du seuil relevée
+   sur 390 × 844 (434 px, soit 51,4 unités — ici l'unité est la hauteur). Les
+   points passent en rangée sous la carte : à droite, il ne reste que 4 %. */
+@media (orientation: portrait) and (max-width: 900px) {
+  :host {
+    width: 92%;
+    height: calc(52 * var(--unite, 1cqw));
+  }
+  .carte-texte__page {
+    padding: 2.4cqw 4.5cqw 2.6cqw;
+    /* L'arrondi des cartes de projets (`projets.css`) : le même sur toutes
+       les cartes du téléphone (Paul, 29/09). */
+    --verre-rayon: 5vw;
+    border-radius: var(--verre-rayon);
+  }
+  /* Au milieu de la bande de 3 rem que la salle laisse entre la carte et ce
+     qui la suit : de l'air des deux côtés (Paul, 28/09). */
+  .carte-texte__points {
+    left: 50%;
+    top: calc(100% + 1.5rem);
+    translate: -50% -50%;
+    grid-auto-flow: column;
+  }
+}

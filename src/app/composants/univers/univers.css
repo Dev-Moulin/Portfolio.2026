@@ -1,0 +1,347 @@
+/* La carte d'un projet, ouverte en grand (voir `univers.ts`).
+
+   Posée HORS des salles, par-dessus la page : ses tailles sont donc en unités
+   d'écran. Elle reprend exactement le dessin de la vignette d'où elle part —
+   mêmes tailles de texte, même verre — pour que l'œil n'y voie qu'une carte
+   qui bouge. Une vignette mesure ses textes en `cqw` DE LA CARTE ; ici
+   `--c` vaut ce même 1 cqw, et `--u` son `--unite`, calculés sur la largeur
+   de la vignette `--w` (0,26 de l'écran sur grand écran). Le titre garde donc
+   sa taille pendant que la carte grandit : il se déplace, il ne gonfle pas.
+
+   LES RÉGLAGES SONT ICI. */
+:host {
+  /* UNE SEULE VITESSE (Paul, 23/09) : la carte se déplace et grandit à la
+     vitesse des cartes qui entrent dans la salle — `--mouvement`, dans
+     `styles.css` —, À L'OUVERTURE COMME À LA FERMETURE. Glisser au centre et
+     grandir sont donc UN seul mouvement : en deux temps de 1,9 s chacun,
+     l'ouverture durerait près de 4 s. Les lignes suivent la même vitesse.
+
+     Pendant l'ouverture, les deux autres cartes et le texte de la salle
+     partent comme au départ de la salle (`projets.css`, `--sortie-cartes`) ;
+     à la fermeture, ils reviennent pendant que la carte regagne sa place.
+     `DUREE_FERMETURE` (`univers.ts`) doit suivre `--mouvement`. */
+  --ouverture-delai: 0.3s;
+  --ouverture-lignes-delai: 1.1s;
+  --pas-ligne: 80ms;
+
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  --t: 1;
+}
+
+/* Un clic à côté de la carte la referme. Transparent : plus de voile sombre,
+   ce qui entoure la carte est le décor de la salle, les autres éléments
+   étant partis. */
+.attrape-clic {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+/* — La carte — */
+.carte {
+  --c: calc(var(--w, 0.26) * 1vw);
+  --u: calc(var(--w, 0.26) * min(1vw, 1.78vh));
+
+  /* Le même verre que les vignettes (`vignette.css`), donc que la carte du
+     seuil : en `vw`, parce qu'une salle posée a la largeur de l'écran. */
+  --verre-rayon: 1.5vw;
+  --verre-flou: 1.7vw;
+  --verre-voile: rgba(10, 10, 11, 0.58);
+  --verre-ombre:
+    0 1.1vw 3.4vw rgba(0, 0, 0, 0.38), 0 0.2vw 0.8vw rgba(0, 0, 0, 0.22),
+    inset 0 0.08vw 0 rgba(232, 238, 251, 0.16);
+
+  /* AU DÉPART : exactement sur la vignette (`departCarte`), centrée sur son
+     milieu pour pouvoir glisser puis grandir sans mélanger les deux. */
+  position: fixed;
+  left: var(--x);
+  top: var(--y);
+  width: var(--l);
+  height: var(--h);
+  translate: -50% -50%;
+  overflow: hidden;
+  pointer-events: auto;
+  outline: none;
+  /* Ces transitions sont celles de la FERMETURE : c'est l'état vers lequel
+     on revient. Taille et place ensemble, d'un seul mouvement. */
+  transition-property: left, top, width, height;
+  transition-duration: var(--mouvement);
+  transition-timing-function: var(--mouvement-courbe);
+}
+
+/* OUVERTE : au centre, au gabarit de la carte du seuil (46 unités de texte
+   de large), et assez haute pour le contenu — au-delà, il défile dedans. */
+.carte--ouverte {
+  left: 50%;
+  top: 50%;
+  width: calc(46 * min(1vw, 1.78vh));
+  /* La hauteur du contenu, mesurée à l'ouverture (`univers.ts`), bornée à
+     82 % de l'écran (78 % jusqu'au 28/09 : Founders débordait) ; à défaut de mesure, ces 82 %. */
+  height: var(--hauteur-ouverte, 82vh);
+  transition-delay: var(--ouverture-delai);
+}
+
+:host(.univers--etroit) .carte--ouverte {
+  width: 92vw;
+}
+
+/* TÉLÉPHONE : la typographie de la carte ouverte est celle d'une carte de
+   92 % de l'écran, pas celle de la vignette (Paul, 28/09). Mesurée sur
+   celle-ci, elle tombait à 3 px de corps : illisible. Le texte change donc
+   d'échelle à l'ouverture, au lieu de glisser sans bouger comme sur grand
+   écran — le prix d'un texte qu'on peut lire. */
+:host(.univers--etroit) {
+  --t: 1.1;
+}
+
+:host(.univers--etroit) .carte {
+  /* L'arrondi de la carte présentée (`projets.css`) : c'est elle qui s'ouvre. */
+  --verre-rayon: 5vw;
+  --c: calc(0.92 * 1vw);
+  --u: calc(0.92 * min(1vw, 1.78vh));
+}
+
+/* EN FERMETURE : elle regagne sa vignette sans rien retenir. Les clics
+   passent au travers, vers une autre vignette qu'on peut ouvrir sans
+   attendre (Paul, 27/09 — voir `univers.ts`). */
+.carte--fermeture {
+  pointer-events: none;
+}
+
+/* La copie invisible qui sert à mesurer : même gabarit, aucune animation,
+   et la colonne dans le flux pour qu'elle ait une hauteur. */
+.carte--mesure {
+  visibility: hidden;
+  pointer-events: none;
+  height: auto !important;
+  transition: none !important;
+}
+.carte--mesure .carte__defilement {
+  position: static;
+}
+.carte--mesure .ligne {
+  transition: none !important;
+}
+
+/* — Ce qui défile dedans — */
+.carte__defilement {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+/* La barre de défilement n'existe que si le contenu dépasse vraiment la
+   carte, et seulement une fois la carte posée : pendant qu'elle grandit, le
+   contenu la déborde un instant, et la barre clignotait sur le côté. */
+.carte--defile .carte__defilement {
+  overflow-y: auto;
+}
+
+/* Une seule colonne, comme dans la vignette : le titre EN HAUT, la pile EN
+   BAS. Le titre ne bouge donc jamais — jusqu'au 23/09, la colonne passait
+   du bas vers le haut, et le titre faisait un aller-retour visible. Les
+   lignes se déplient entre les deux, et poussent la pile. */
+.carte__contenu {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: calc(7 * var(--c));
+}
+
+/* LIGNE PAR LIGNE. Fermée, une ligne ne prend aucune place (`0fr`) : la
+   colonne est alors exactement celle de la vignette — rubrique, nom, pile.
+   Ouverte, chacune se déplie à son tour, avec `--i` × `--pas-ligne` de
+   retard, et monte en fondu. */
+.ligne {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  translate: 0 calc(1.2 * var(--c));
+  transition-property: grid-template-rows, opacity, translate;
+  transition-duration: var(--mouvement);
+  transition-timing-function: var(--mouvement-courbe);
+}
+
+.ligne > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.carte--ouverte .ligne {
+  --delai: calc(var(--ouverture-lignes-delai) + var(--i, 0) * var(--pas-ligne));
+  grid-template-rows: 1fr;
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: var(--delai);
+}
+
+/* — La typographie : celle de la vignette, au pixel près — */
+.carte__baseline {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 3.1 * var(--u));
+  letter-spacing: 0.18em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  /* Comme la vignette : l'orange de « Harness is everything » (Paul, 29/09). */
+  color: var(--accent-chaud);
+}
+
+.carte__nom {
+  margin: calc(2 * var(--c)) 0 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: calc(var(--t) * 8.6 * var(--u));
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* La phrase d'usage : celle de la vignette, à la même place. */
+.carte__accroche {
+  margin: calc(2 * var(--c)) 0 0;
+  font-size: calc(var(--t) * 3.7 * var(--u));
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+/* Le contenu propre à la carte ouverte. Les marges sont DANS la ligne (en
+   `padding`), pour se replier avec elle. */
+.carte__contexte,
+.carte__fait {
+  margin: 0;
+  padding-top: calc(2.6 * var(--c));
+}
+
+.carte__contexte {
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 2.9 * var(--u));
+  line-height: 1.5;
+  color: var(--accent-ambre);
+}
+
+.carte__fait {
+  position: relative;
+  padding-left: calc(6 * var(--c));
+  font-size: calc(var(--t) * 3.3 * var(--u));
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+/* Un petit point, pas de tiret long : le tiret long fait « texte d'IA »
+   (Paul, 27/09). Centré sur la première ligne. */
+.carte__fait::before {
+  content: '';
+  position: absolute;
+  left: calc(1.4 * var(--c));
+  top: calc(2.6 * var(--c) + 0.775em - 0.18em);
+  width: 0.36em;
+  height: 0.36em;
+  border-radius: 50%;
+  background: var(--encre-tenue);
+}
+
+.carte__pile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.6 * var(--c));
+  /* La largeur de la carte OUVERTE, dès le départ (moins ses marges). Sinon
+     la rangée se réorganisait pendant que la carte s'élargit, et les
+     pastilles sautaient d'une ligne à l'autre (mesuré le 23/09 : 23 px au
+     clic, puis 37 px en plein mouvement). Ce qui dépasse de la petite carte
+     est rogné par elle. */
+  flex-shrink: 0;
+  width: calc(46 * min(1vw, 1.78vh) - 14 * var(--c));
+  margin: auto 0 0;
+  padding: calc(2 * var(--c)) 0 0;
+  list-style: none;
+}
+
+:host(.univers--etroit) .carte__pile {
+  width: calc(92vw - 14 * var(--c));
+}
+
+/* Les mêmes bulles de verre que dans la vignette (`vignette.css`). */
+.carte__pile li {
+  --verre-rayon: 999px;
+  --verre-flou: 1.7vw;
+  --verre-voile: rgba(10, 10, 11, 0.58);
+  --verre-ombre:
+    0 0.25vw 0.8vw rgba(0, 0, 0, 0.3), inset 0 0.08vw 0 rgba(232, 238, 251, 0.16);
+  padding: calc(1 * var(--c)) calc(3 * var(--c));
+  font-family: var(--mono);
+  font-size: calc(var(--t) * 2.7 * var(--u));
+  line-height: 1.4;
+  color: var(--encre-douce);
+}
+
+/* La vignette ne montre que les quatre premiers outils ; la carte ouverte
+   fait apparaître les suivants, après les faits. Ils sont DÉJÀ à leur
+   place, invisibles : les faire naître (`display`) décalait toute la
+   rangée. */
+.carte__pile-suite {
+  opacity: 0;
+  transition: opacity var(--mouvement) var(--mouvement-courbe);
+}
+
+.carte--ouverte .carte__pile-suite {
+  opacity: 1;
+  transition-delay: calc(var(--ouverture-lignes-delai) + var(--i, 0) * var(--pas-ligne));
+}
+
+/* — La croix — discrète, et seulement une fois la carte ouverte. Sur un écran
+   tactile, sans elle, rien ne dirait comment refermer. */
+.carte__fermer {
+  position: absolute;
+  z-index: 2;
+  top: calc(4.5 * var(--c));
+  right: calc(4.5 * var(--c));
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(232, 238, 251, 0.06);
+  color: var(--encre);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--mouvement) var(--mouvement-courbe),
+    background 180ms ease;
+}
+
+.carte--ouverte .carte__fermer {
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    opacity var(--mouvement) var(--mouvement-courbe) var(--ouverture-lignes-delai),
+    background 180ms ease;
+}
+
+.carte__fermer:hover,
+.carte__fermer:focus-visible {
+  outline: none;
+  background: rgba(232, 238, 251, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte,
+  .carte__contenu,
+  .ligne,
+  .carte__fermer {
+    transition: none !important;
+  }
+  .carte__pile-suite,
+  .carte__page,
+  .carte__boucle {
+    transition: none !important;
+  }
+}

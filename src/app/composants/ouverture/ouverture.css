@@ -1,0 +1,119 @@
+/* Toutes les dimensions sont en `cqw` : 1 % de la largeur de la PIÈCE qui
+   contient l'ouverture. Quand cette pièce remplit l'écran, 1cqw vaut 1 % de
+   l'écran — le liseré et le libellé ont alors la bonne taille. Vue de loin,
+   la même ouverture n'est qu'un fin trait, ce qui est exactement ce qu'on
+   veut. Aucune compensation du zoom en JavaScript n'est nécessaire. */
+
+:host {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  /* PAS DE FOND OPAQUE. Mesuré le 11/09 : ce `#05070f` hérité de l'époque du
+     fond bleu peignait un aplat sous chaque vignette. Le verre de la carte
+     floutait donc un bleu uni au lieu du décor — corrélation entre l'intérieur
+     de la carte et le temple derrière : -0,158, c'est-à-dire aucune. C'est
+     l'ouverture qui rendait les cartes bleues et opaques, pas le verre.
+     Le liseré suffit à dire qu'il y a une fenêtre là. */
+  background: transparent;
+  isolation: isolate;
+}
+
+.ouverture__cadre {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 0.09cqw var(--trait),
+    inset 0 0 3cqw rgba(111, 211, 247, 0.07);
+  transition: box-shadow 220ms ease;
+}
+
+:host(:hover) .ouverture__cadre,
+:host(:focus-visible) .ouverture__cadre {
+  box-shadow:
+    inset 0 0 0 0.13cqw var(--trait-fort),
+    inset 0 0 4cqw rgba(111, 211, 247, 0.2);
+}
+
+.ouverture__libelle {
+  position: absolute;
+  z-index: 3;
+  left: 1cqw;
+  bottom: 1cqw;
+  padding: 0.5cqw 0.9cqw;
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.85 * var(--unite, 1cqw));
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--encre);
+  background: rgba(5, 7, 15, 0.85);
+  box-shadow: inset 0 0 0 0.1cqw var(--trait);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+:host(:hover) .ouverture__libelle,
+:host(:focus-visible) .ouverture__libelle {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.ouverture--carte) .ouverture__cadre {
+    transform: none;
+  }
+  .ouverture__cadre,
+  .ouverture__libelle {
+    transition: none;
+  }
+}
+
+/* UNE OUVERTURE QUI PORTE UNE CARTE (les trois vignettes de la salle 2).
+   La carte a déjà son arête de verre, arrondie : le liseré rectangulaire de
+   l'ouverture faisait un second cadre, à angles droits, autour d'elle — « alors
+   que nous, on avait choisi des bords arrondis » (Paul, 23/09). Au repos, il
+   disparaît ; au survol et au focus clavier, il revient en épousant l'arrondi.
+   Le libellé aussi s'en va : la carte porte déjà son nom en grand, et le
+   libellé se posait sur les étiquettes de la pile.
+
+   L'arrondi est celui de la carte, `--verre-rayon` de `vignette.css` : 1,5vw,
+   ou `--arrondi-carte` quand la salle le change (les cartes du téléphone).
+   En `vw` et pas en `cqw` — ici `cqw` mesure la salle, dans la vignette il
+   mesure la carte ; seul `vw` est le même des deux côtés. */
+:host(.ouverture--carte) {
+  border-radius: var(--arrondi-carte, 1.5vw);
+}
+
+:host(.ouverture--carte) .ouverture__cadre {
+  border-radius: var(--arrondi-carte, 1.5vw);
+  box-shadow: none;
+  /* Il penche avec la carte qu'on presse (`vignette/inclinaison.ts`) : resté
+     à plat, il faisait un second contour autour d'elle. Mêmes variables, même
+     transformation que `.vignette`. */
+  transform: perspective(1100px) rotateX(calc(var(--incl-x, 0) * 1deg))
+    rotateY(calc(var(--incl-y, 0) * 1deg)) scale(calc(1 - 0.022 * var(--appui, 0)));
+  transition:
+    box-shadow 220ms ease,
+    transform 0.5s var(--mouvement-courbe);
+}
+
+:host(.ouverture--carte:hover) .ouverture__cadre,
+:host(.ouverture--carte:focus-visible) .ouverture__cadre {
+  box-shadow:
+    inset 0 0 0 1.5px var(--trait-fort),
+    inset 0 0 1vw rgba(232, 238, 251, 0.1);
+}
+
+:host(.ouverture--carte) .ouverture__libelle {
+  display: none;
+}
+
+/* Au doigt, pas de survol (Paul, 29/09) : un écran tactile garde le `:hover`
+   collé à la carte qu'on vient de toucher, qui restait comme présélectionnée. */
+@media (hover: none) {
+  :host(.ouverture--carte:hover) .ouverture__cadre {
+    box-shadow: none;
+  }
+}

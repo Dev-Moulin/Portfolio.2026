@@ -1,0 +1,68 @@
+/* Posé par-dessus toutes les salles, à la taille de l'écran, et transparent
+   au pointeur : seules les portes elles-mêmes reçoivent le clic. Déclaré
+   conteneur pour que `cqw` y vaille, comme dans une salle posée, 1 % de
+   l'écran. */
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  container-type: size;
+}
+
+/* Les dimensions reprennent celles de l'ancienne ouverture (`ouverture.css`),
+   multipliées par `--echelle` : le grossissement de la salle qui porte la
+   porte. Posée, elle vaut 1 ; pendant qu'on la traverse, le liseré grossit
+   avec elle, comme avant. */
+.porte {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow:
+    inset 0 0 0 calc(0.09cqw * var(--echelle, 1)) var(--trait),
+    inset 0 0 calc(3cqw * var(--echelle, 1)) rgba(111, 211, 247, 0.07);
+  transition: box-shadow 220ms ease;
+}
+
+.porte:hover,
+.porte:focus-visible,
+.porte--visee {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 calc(0.13cqw * var(--echelle, 1)) var(--trait-fort),
+    inset 0 0 calc(4cqw * var(--echelle, 1)) rgba(111, 211, 247, 0.2);
+}
+
+.porte__libelle {
+  position: absolute;
+  left: calc(1cqw * var(--echelle, 1));
+  bottom: calc(1cqw * var(--echelle, 1));
+  padding: calc(0.5cqw * var(--echelle, 1)) calc(0.9cqw * var(--echelle, 1));
+  font-family: var(--mono);
+  font-size: calc(var(--texte, 1) * 0.85 * var(--unite, 1cqw) * var(--echelle, 1));
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--encre);
+  background: rgba(5, 7, 15, 0.85);
+  box-shadow: inset 0 0 0 calc(0.1cqw * var(--echelle, 1)) var(--trait);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.porte:hover .porte__libelle,
+.porte:focus-visible .porte__libelle {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .porte,
+  .porte__libelle {
+    transition: none;
+  }
+}

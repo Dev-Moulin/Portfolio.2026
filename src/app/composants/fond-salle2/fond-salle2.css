@@ -1,0 +1,19 @@
+/* Derrière la scène, comme la trame — c'est le fond de la pièce qui devient
+   transparent pour laisser voir le décor. */
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #000;
+}
+
+.fond-salle2__boucle {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* `cover` : le décor est cadré pour le centre, on préfère rogner les bords
+     plutôt que laisser des bandes noires sur un écran plus large ou plus haut
+     que le 16/9 du rendu. */
+  object-fit: cover;
+}

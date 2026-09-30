@@ -1,0 +1,55 @@
+<div class="piece__contenu" [style.opacity]="opacite()">
+  <!-- LE TITRE (Paul, 25/09) : l'école à gauche, le partenaire à droite, et le
+       logo en particules, qui passe de l'un à l'autre, pour croix au milieu.
+       Les deux mots sont aussi les SOURCES des flux de particules qui
+       nourrissent le logo (`data-flux`, lu par `pz-particules-logo`). -->
+  <h2 class="projets__titre">
+    <span
+      class="projets__mot projets__mot--gauche"
+      data-flux="projets"
+      data-placement="thp"
+      [style.--dx]="textes().thp.x"
+      [style.--dy]="textes().thp.y"
+    >THP</span>
+    <span class="projets__croix" aria-hidden="true"></span>
+    <span class="pour-lecteur"> × </span>
+    <span
+      class="projets__mot projets__mot--droite"
+      data-flux="projets"
+      data-placement="intuition"
+      [style.--dx]="textes().intuition.x"
+      [style.--dy]="textes().intuition.y"
+    >Intuition</span>
+  </h2>
+
+  <p
+    class="piece__texte projets__intro"
+    data-placement="intro"
+    [style.--dx]="textes().intro.x"
+    [style.--dy]="textes().intro.y"
+  >
+    <!-- Réduite à son début (Paul, 29/09) : la suite prenait beaucoup de
+         place au téléphone, et les cartes la disent. -->
+    {{ intro() }}
+  </p>
+</div>
+
+<!-- LES CARTES NAISSENT DE LA FUMÉE (Paul, 25/09), au second temps de la
+     salle. Elles sont toujours à leur place, invisibles et inertes tant
+     qu'elles ne sont pas révélées : c'est leur verre qui se forme, pas elles
+     qui bougent (`projets.css`). `data-fumee` dit à `pz-fumee` où les
+     envelopper. -->
+@for (projet of projets(); track projet.id; let i = $index) {
+  <pz-ouverture
+    class="projets__carte ouverture--carte"
+    data-fumee
+    pzInclinaison
+    [attr.inert]="montree(i) ? null : ''"
+    [attr.data-entree]="entree(i)"
+    [class.projets__carte--cachee]="placement.carteMontree() !== null && placement.carteMontree() !== i"
+    [class.projets__carte--choisie]="nav.cartesAffichees().includes(projet.id)"
+    [ouverture]="ouverture(projet.id)"
+  >
+    <pz-vignette [projet]="projet" />
+  </pz-ouverture>
+}

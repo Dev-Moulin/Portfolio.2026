@@ -1,0 +1,154 @@
+:host {
+  background:
+    radial-gradient(60% 60% at 8% 8%, rgba(247, 178, 103, 0.08), transparent 60%),
+    var(--fond-orchestrateur);
+}
+
+/* Le décor vient de la toile du passage (le visage dans les nuages), posée
+   derrière la scène : la salle ne doit plus rien peindre sous son texte. */
+:host(.piece--sur-decor) {
+  background: transparent;
+}
+
+/* La carte de gauche, au gabarit unique (`pz-carte-texte`) : ici, seulement
+   sa place. Centrée en hauteur, comme au seuil. */
+.orch__carte {
+  position: absolute;
+  left: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* LA CHORÉGRAPHIE (Paul, 24/09) : comme la carte de gauche de la salle 2, la
+   carte attend HORS de l'écran, à gauche, et entre une fois la salle
+   présente (caméra posée, page chargée) ; elle repart par où elle est venue.
+   Mêmes durées que la salle 2 (`projets.css`). 160 % de sa largeur : elle
+   sort entièrement, ombre comprise, même collée à 5 % du bord.
+   `translate` et pas `transform`, qui porte déjà le centrage vertical ; et
+   pas d'opacité, qui couperait le flou du verre pendant tout le mouvement. */
+.orch__carte {
+  translate: -160% 0;
+  transition: translate 0.8s cubic-bezier(0.3, 0, 0.6, 0.6);
+}
+:host(.choree--presente) .orch__carte {
+  translate: 0 0;
+  transition: translate var(--mouvement) var(--mouvement-courbe) 0.5s;
+}
+
+.orch__baseline {
+  margin: 1.2cqw 0 0;
+  font-family: var(--serif);
+  font-size: calc(var(--texte, 1) * 1.5 * var(--unite, 1cqw));
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--accent-chaud);
+}
+
+/* Les parties de la carte, comme sur les cartes de projets (Paul, 28/09) :
+   un intertitre discret, puis le texte ou la liste. */
+.orch__intertitre {
+  margin: 1.6cqw 0 0;
+  font-family: var(--mono);
+  /* Plus gros et en ambre (Paul, 29/09) : en gris, à 0,72, ils se perdaient. */
+  font-size: calc(var(--texte, 1) * 0.9 * var(--unite, 1cqw));
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--accent-ambre);
+}
+
+/* `MySkill.md` : un vrai nom de fichier, dans sa casse. */
+.orch__intertitre--fichier {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* « Harness is everything » : une citation, pas une rubrique — à la taille
+   de l'accroche de la première page (Paul, 29/09). */
+.orch__intertitre--citation {
+  font-family: var(--serif);
+  font-size: calc(var(--texte, 1) * 1.5 * var(--unite, 1cqw));
+  line-height: 1.3;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent-chaud);
+}
+
+.orch__texte {
+  margin-top: 0.5cqw;
+}
+
+/* UNE PAGE REMPLIT SA CARTE (Paul, 29/09) : ses parties se répartissent dans
+   la hauteur au lieu de se tasser en haut. */
+.orch__page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+}
+
+.orch__page > .orch__partie > :first-child {
+  margin-top: 0;
+}
+
+/* Sous deux listes, un paragraphe à leur taille : il tient sur la même page
+   et ne crie pas plus fort qu'elles (Paul, 29/09). */
+.orch__texte--liste {
+  font-size: calc(var(--texte, 1) * 0.98 * var(--unite, 1cqw));
+  line-height: 1.5;
+}
+
+.orch__liste {
+  margin: 0.3cqw 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Un petit point, pas de tiret long (Paul, 27/09). */
+.orch__point {
+  position: relative;
+  padding: 0.35cqw 0 0 1.4cqw;
+  font-size: calc(var(--texte, 1) * 0.98 * var(--unite, 1cqw));
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+.orch__point::before {
+  content: '';
+  position: absolute;
+  left: 0.2cqw;
+  top: calc(0.35cqw + 0.75em - 0.18em);
+  width: 0.36em;
+  height: 0.36em;
+  border-radius: 50%;
+  background: var(--encre-tenue);
+}
+
+/* TÉLÉPHONE (Paul, 29/09) : la carte prend l'écran, comme celle du profil
+   (`seuil.css`) — du haut de l'écran jusqu'aux points des pages, posés
+   au-dessus de la barre des repères. Il n'y a pas de liens sous elle :
+   toute cette place va au texte. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .orch__carte {
+    left: 4%;
+    transform: none;
+    top: max(1rem, env(safe-area-inset-top));
+    /* La bande de 3 rem des points des pages, au-dessus des repères. */
+    bottom: calc(var(--reserve-bas) + 3rem);
+    height: auto;
+    /* Mesuré le 29/09 sur 360 × 560, 375 × 640, 390 × 844 et 430 × 932 : la
+       page la plus pleine (Harness is everything et la suite) garde 24 px
+       d'air sur 390 × 844, là où 1,85 la faisait déborder de 125 px. */
+    --texte: 1.62;
+  }
+  /* Le retrait des puces en `cqw` de la salle ne laisse qu'un pixel sur un
+     téléphone : la puce touchait la première lettre. */
+  .orch__point {
+    padding-left: 1.1em;
+  }
+  .orch__point::before {
+    left: 0.25em;
+  }
+}

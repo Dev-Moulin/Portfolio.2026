@@ -1,0 +1,19 @@
+<div class="ciel" aria-hidden="true"></div>
+
+<div class="piece__contenu" [style.opacity]="opacite()">
+  <div class="p3d__entete">
+    <p class="piece__sur-titre">Pièce 3 · le fond</p>
+    <h2 class="piece__titre">{{ donnees.titre }}</h2>
+    <p class="p3d__baseline">{{ donnees.baseline }}</p>
+  </div>
+  <p class="piece__texte p3d__texte">{{ donnees.texte }}</p>
+</div>
+
+<pz-ouverture [ouverture]="ouverture('sortie')">
+  <div class="p3d__hublot">
+    <div class="ciel ciel--dense" aria-hidden="true"></div>
+    <p class="p3d__hublot-texte">
+      dev-moulin.github.io<span>/my-portfolio</span>
+    </p>
+  </div>
+</pz-ouverture>

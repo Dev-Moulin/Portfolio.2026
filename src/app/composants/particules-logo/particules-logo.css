@@ -1,0 +1,22 @@
+/* L'emblème ne fait jamais partie de la scène : il est posé par-dessus, à la
+   taille de l'écran, et c'est le viewport WebGL qui le découpe à l'endroit
+   calculé par `zoneEcran`.
+
+   Ce n'est pas un choix esthétique mais un fait mesuré : une toile WebGL
+   placée DANS la scène zoomée n'est peinte que sur les deux tiers de sa
+   surface, décalée — voir l'en-tête du composant. */
+
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 6; /* au-dessus de la descente (5), sous les repères (10) */
+  pointer-events: none;
+  background: transparent;
+  transition: opacity 600ms ease;
+}
+
+.particules-logo__toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

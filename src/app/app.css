@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  height: 100%;
+  touch-action: none; /* le glissement pilote la profondeur, pas un défilement */
+}
+
+.vue {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* NE METS PAS `will-change: transform` SUR LES SALLES. Mesuré et tranché le
+   11/09, sur la scène emboîtée d'alors — et toujours vrai pour les calques.
+
+   La doc de Chrome le dit mot pour mot : `will-change: transform` « force le
+   contenu dans un bitmap figé, qui ensuite ne change plus jamais sous les
+   mises à jour de transformation »
+   (https://developer.chrome.com/blog/re-rastering-composite).
+
+   Sur une scène qui va jusqu'à `scale(457)`, ça veut dire que Chrome peint
+   la page UNE FOIS, à l'échelle du moment, puis se contente d'agrandir cette
+   vieille image. Symptôme vécu par Paul : la photo du seuil revenait mal
+   cadrée, « grignotée », une fois sur deux après un aller-retour vers les
+   projets — boîte juste, pixels faux. Une fois sur deux seulement, parce que
+   Chrome décide parfois tout seul de refaire le bitmap.
+
+   Sans cette ligne, on retrouve le comportement par défaut depuis Chrome 53 :
+   re-tramation à chaque changement d'échelle. C'est juste et net, et c'est
+   plus cher en processeur. Depuis le 23/09, les salles ne sont plus
+   grossies au repos (voir `PieceBase`) : ce coût ne se paie plus que
+   pendant les transitions. */

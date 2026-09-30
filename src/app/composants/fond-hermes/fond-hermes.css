@@ -1,0 +1,34 @@
+/* Au-dessus de la toile du passage (qui porte H6 fixe), sous la vue : c'est
+   l'ordre du document qui décide, comme pour la toile — voir `app.html`. */
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  /* La sortie : un fondu court, sur la toile qui porte la même image. */
+  transition: opacity 0.35s ease;
+}
+
+/* L'arrivée : d'un coup. La première image de l'apparition est celle que la
+   toile affiche déjà. */
+:host(.fond-hermes--visible) {
+  opacity: 1;
+  transition: none;
+}
+
+.fond-hermes__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* `fill` et pas `cover` : la toile étire H6 à la taille de la fenêtre, la
+     vidéo doit tomber exactement dessus. */
+  object-fit: fill;
+}
+
+/* Au téléphone, la toile montre l'étage 20 en `cover`, centré : la vidéo,
+   qui en part, se cadre pareil. */
+:host(.fond-hermes--portrait) .fond-hermes__video {
+  object-fit: cover;
+}

@@ -1,0 +1,284 @@
+/* Le seul élément qui ne fait pas partie de la scène. Il doit dire où l'on
+   est sans jamais recouvrir une pièce : une colonne de points sur le bord
+   droit au bureau, une barre pleine largeur en bas sur téléphone.
+
+   Depuis PH-3 lot 1, il est franchement plus gros : c'est le seul repère
+   permanent du site, et il doit se voir sans être cherché. */
+
+:host {
+  --marge-reperes: clamp(0.9rem, 4vw, 1.6rem);
+  --taille-repere: 2.4rem;
+  position: fixed;
+  right: clamp(0.9rem, 2vw, 1.6rem);
+  top: 50%;
+  z-index: 10;
+  transform: translateY(-50%);
+}
+
+/* L'ÉCART EST LA LONGUEUR DE LA JAUGE. La jauge court d'un centre de point
+   au centre du dernier ; sa longueur est donc entièrement décidée par le
+   `gap`, jamais par une hauteur qu'on lui donnerait. À 1,3 rem elle faisait
+   11 rem de haut et se lisait comme un détail ; à 3 rem elle en fait 16, et
+   le parcours occupe enfin le bord droit. L'épaisseur, elle, ne bouge pas :
+   c'est un trait, pas une barre. */
+.reperes__liste {
+  display: grid;
+  gap: 3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repere {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--taille-repere);
+  height: var(--taille-repere);
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--encre-tenue);
+}
+
+.repere__point {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 50%;
+  background: currentColor;
+  transition:
+    transform 240ms ease,
+    background 240ms ease;
+}
+
+.repere:focus-visible {
+  color: var(--encre);
+}
+
+@media (hover: hover) {
+  .repere:hover {
+    color: var(--encre);
+  }
+  .repere:hover .repere__nom {
+    visibility: visible;
+    opacity: var(--repos, 1);
+    transform: none;
+    transition:
+      opacity 240ms ease,
+      transform 240ms ease,
+      visibility 0s;
+  }
+}
+
+/* Pas de bleu (Paul, 24/09) : la liste parle la même langue que les cartes,
+   du blanc sur du verre. La salle où l'on est se reconnaît à son point, plus
+   gros et cerclé, et à son nom toujours affiché. */
+.repere--actif {
+  color: var(--encre);
+}
+
+.repere--actif .repere__point {
+  transform: scale(1.45);
+  box-shadow: 0 0 0 0.42rem rgba(232, 238, 251, 0.14);
+}
+
+/* Le nom, en surimpression à gauche du point — jamais dans le flux, donc il
+   ne peut pas pousser quoi que ce soit. Celui de la pièce où l'on est reste
+   affiché en permanence : c'est lui qui répond à « où suis-je ». */
+/* La pastille du nom : la matière commune (`verre`, dans `styles.css`), en
+   PASTILLE COMPLÈTE — mêmes bouts ronds que l'invite « Défilez pour
+   descendre », qui est la même chose vue au milieu du seuil.
+
+   Les variables sont en `rem` et non en `cqw` : les repères vivent HORS de la
+   scène mise à l'échelle, donc `cqw` y vaudrait 1 % de la fenêtre entière et
+   le rayon serait dix fois trop grand. */
+.repere__nom {
+  position: absolute;
+  right: calc(var(--taille-repere) * 0.92);
+  padding: 0.42rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--encre);
+
+  --verre-rayon: 999px;
+  --verre-arete: 1px;
+  --verre-flou: 12px;
+  --verre-ombre:
+    0 0.45rem 1.3rem rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(232, 238, 251, 0.16);
+
+  /* ELLE N'EST PAS PEINTE TANT QU'ELLE N'EST PAS DEMANDÉE — et c'est aussi ce
+     qui empêche quatre `backdrop-filter` invisibles de rester empilés dans la
+     même colonne de l'écran : un filtre sur un élément transparent coûte
+     toujours sa passe de composition, et certains pilotes en laissent la trace
+     à l'écran. `visibility` et pas seulement `opacity`, parce que seul
+     `visibility: hidden` retire réellement l'élément de la composition. */
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(0.4rem);
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease,
+    visibility 0s linear 240ms;
+}
+
+/* Le survol ne compte qu'avec une vraie souris (`(hover: hover)`). Sur
+   iPhone, une bulle touchée reste « survolée » jusqu'au toucher suivant : son
+   nom restait affiché en plus de celui de la salle où l'on arrivait — souvent
+   « Profil » (Paul, 29/09). */
+.repere--actif .repere__nom,
+.repere:focus-visible .repere__nom {
+  visibility: visible;
+  opacity: var(--repos, 1);
+  transform: none;
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease,
+    visibility 0s;
+}
+
+
+/* La jauge : la position exacte de la caméra entre deux pièces. */
+.reperes__jauge {
+  position: absolute;
+  right: calc(var(--taille-repere) / 2);
+  top: calc(var(--taille-repere) / 2);
+  bottom: calc(var(--taille-repere) / 2);
+  width: 2px;
+  margin: 0 -1px 0 0;
+  background: rgba(232, 238, 251, 0.16);
+  z-index: -1;
+}
+
+.reperes__curseur {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--encre);
+  /* La position vient d'un style en ligne (top ET left) : la jauge est
+     verticale sur grand écran, horizontale sur téléphone, et la dimension
+     inutilisée vaut 0 % d'un côté d'un pixel. Le décalage recentre le point
+     sur le trait dans les deux cas. */
+  transform: translate(-50%, -50%);
+}
+
+/* Le mot d'invite : il n'apparaît qu'au moment où la caméra bute contre le
+   bord d'une pièce. Son opacité vient du cœur (`invite()`), pas d'une règle
+   CSS — la butée est une valeur calculée, pas un état de survol. */
+.reperes__invite {
+  position: absolute;
+  right: calc(var(--taille-repere) * 1.5);
+  top: 50%;
+  margin: 0;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--encre-douce);
+  pointer-events: none;
+}
+
+/* Sur téléphone, la barre prend TOUTE la largeur disponible en bas de
+   l'écran : quatre cases égales, un point au milieu de chacune. Le nom de
+   la pièce courante se pose au-dessus, centré sur son point. */
+@media (orientation: portrait) and (max-width: 900px) {
+  /* Au repos, la barre s'efface d'un quart (Paul, 29/09 — `reperes.ts`).
+     Chaque élément à part, pas la barre entière : une opacité sur un parent
+     isolerait le flou de verre des bulles, qui ne flouteraient plus rien.
+     Lue par les règles d'opacité des points, de la jauge et des noms. */
+  :host(.reperes--repos) {
+    --repos: 0.75;
+  }
+  .repere__point,
+  .reperes__jauge {
+    opacity: var(--repos, 1);
+    transition:
+      transform 240ms ease,
+      background 240ms ease,
+      opacity 600ms ease;
+  }
+
+  :host {
+    --taille-repere: 2.9rem;
+    right: 0;
+    left: 0;
+    top: auto;
+    bottom: max(0.7rem, env(safe-area-inset-bottom));
+    transform: none;
+  }
+
+  .reperes__liste {
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0;
+    /* La carte ne colle pas aux bords de l'écran : elle a sa marge, puis sa
+       marge intérieure. */
+    padding: 0 var(--marge-reperes);
+  }
+
+  .repere {
+    width: 100%;
+  }
+
+  .repere__point {
+    width: 0.92rem;
+    height: 0.92rem;
+  }
+
+  /* Plus petit qu'au bureau (Paul, 28/09) : c'est une étiquette, pas une
+     cible — le doigt vise le point, qui garde sa case de 2,9 rem. */
+  .repere__nom {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    right: auto;
+    left: 50%;
+    bottom: calc(var(--taille-repere) * 0.92);
+    transform: translateX(-50%) translateY(0.3rem);
+  }
+
+  .repere--actif .repere__nom,
+  .repere:focus-visible .repere__nom {
+    transform: translateX(-50%);
+  }
+  @media (hover: hover) {
+    .repere:hover .repere__nom {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* La jauge court du CENTRE de la première case au centre de la dernière,
+     comme au bureau d'un point à l'autre (Paul, 28/09). Elle allait d'un
+     bord à l'autre : à la première salle, le petit point restait seul dans
+     la marge, avant le premier gros point. Une case fait 1/N de la barre
+     (hors marges) ; son centre est à une demi-case. */
+  .reperes__jauge {
+    --demi-case: calc((100% - 2 * var(--marge-reperes)) / (2 * var(--pieces, 4)));
+    right: calc(var(--marge-reperes) + var(--demi-case));
+    left: calc(var(--marge-reperes) + var(--demi-case));
+    top: calc(var(--taille-repere) / 2);
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    margin: -1px 0 0;
+  }
+
+  .reperes__invite {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: calc(var(--taille-repere) + 1.8rem);
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repere__point,
+  .repere__nom {
+    transition: none;
+  }
+}

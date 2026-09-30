@@ -1,0 +1,44 @@
+# Deploys the portfolio to GitHub Pages on every push to main.
+# Tests first, then the production build: a red test or a red build fails the deploy, on purpose.
+# Pages source must be set to "GitHub Actions" in the repo settings.
+name: Deploy Portfolio.2026 to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx ng test --watch=false
+      - run: npm run build # -> dist/portfolio-zoom/browser (base href '/Portfolio.2026/' in production)
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/portfolio-zoom/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
