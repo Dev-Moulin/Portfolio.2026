@@ -31,7 +31,7 @@
 
 Comme Alice au pays des merveilles, descendez de salle en salle, à la molette, au clavier ou du bout des doigts. Vous y trouverez mon profil, trois projets (Intuition, Overmind 3D et Overmind Founders Collection), puis mon travail sur les agents IA. Chaque projet s'ouvre en grand sur place.
 
-### Ce qu'il y a sous le capot
+### Côté technique
 
 - **Les passages d'une salle à l'autre** sont des pyramides d'images générées en local, recalées entre elles pour que le zoom ne saute jamais, et dessinées sur une toile.
 - **Les décors** sont des boucles vidéo faites dans Blender, lues sans couture grâce aux Media Source Extensions.
@@ -57,7 +57,7 @@ npm run build      # dist/portfolio-zoom/browser/
 
 Like Alice in Wonderland, go down from room to room with the mouse wheel, the keyboard or your fingertips. You will find my profile, three projects (Intuition, Overmind 3D and Overmind Founders Collection), then my work on AI agents. Each project opens up right where it is.
 
-### Under the hood
+### The technical side
 
 - **The passages between rooms** are pyramids of locally generated images, aligned with each other so the zoom never jumps, and drawn on a canvas.
 - **The backgrounds** are video loops made in Blender, played seamlessly with Media Source Extensions.
